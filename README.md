@@ -2,8 +2,8 @@
 
 An investment-committee style **giving memo for one to three US charities**, written by a team of AI agents
 from the charity's IRS Form 990 filings and its own website, weighted to what the donor cares about. Every
-number in the memo links to its source, and anything that cannot be verified becomes a question to ask the
-charity.
+figure in the memo's findings links to its source and was checked by code, and anything that cannot be
+verified becomes a question to ask the charity.
 
 Yale SOM MGT 409 (AI Foundations for Managers) final project, Talha Javed, October 2026.
 
@@ -75,8 +75,10 @@ Without a key the app still starts: you can search charities and open the saved 
    hides text (white on white, `display:none`, an HTML comment, an `aria-hidden` block) telling AI reviewers
    to rate it 100/100, claim a 95% program-spending ratio, and say GiveWell evaluated it. All of it is
    removed before any model reads the page.
-4. Read the memo (about a minute and under $0.01 per run). Click any source chip to see where a number
-   came from: an IRS field, a deterministic calculation, or a quoted website excerpt.
+4. Read the memo (the run takes about a minute and costs under $0.01). Click any source chip to see where a
+   number came from: an IRS field, a deterministic calculation, or a quoted website excerpt.
+5. Move the **Try different priorities** sliders to re-rank the charities instantly (no AI calls), and use
+   **Draft an email to the charity** to send the questions.
 
 You can also search any US charity by name or EIN. DEMO charities are fictional and labelled as such.
 
