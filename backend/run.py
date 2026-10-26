@@ -45,10 +45,12 @@ def main() -> int:
     settings = get_settings()
     port = settings.port
     if not _port_free(HOST, port):
+        alt = port + 1
         print(f"Port {port} is already in use, so the app cannot start.")
         print("Stop the other program using it, or pick another port, for example:")
-        print("    PORT=8001 python backend/run.py        (macOS / Linux)")
-        print("    set PORT=8001 && python backend\\run.py  (Windows)")
+        print(f"    PORT={alt} python backend/run.py                (macOS / Linux)")
+        print(f"    $env:PORT={alt}; python backend\\run.py         (Windows PowerShell)")
+        print(f"or add the line PORT={alt} to your .env file.")
         return 1
 
     from app.main import app
