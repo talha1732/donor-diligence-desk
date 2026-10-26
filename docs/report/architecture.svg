@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" role="img" aria-label="Donor Diligence Desk agent architecture">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a4560"/>
+    </marker>
+    <style>
+      .stage { font-size: 12px; font-weight: 700; letter-spacing: .06em; fill: #667085; text-transform: uppercase; }
+      .t { font-size: 15px; font-weight: 700; fill: #14213d; }
+      .s { font-size: 12px; fill: #3a4560; }
+      .tool { font-size: 11.5px; fill: #0b5d57; font-family: ui-monospace, Menlo, Consolas, monospace; }
+      .code { fill: #ffffff; stroke: #14213d; stroke-width: 1.5; }
+      .ai { fill: #e7f4f2; stroke: #0f766e; stroke-width: 2; }
+      .safe { fill: #fdf3df; stroke: #8f5b00; stroke-width: 1.5; }
+      .src { fill: #f7f8fa; stroke: #d0d5dd; stroke-width: 1.2; }
+      .ln { stroke: #3a4560; stroke-width: 1.6; fill: none; }
+      .dash { stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <!-- stage labels -->
+  <text class="stage" x="85" y="34" text-anchor="middle">Donor</text>
+  <text class="stage" x="250" y="34" text-anchor="middle">1 Intake · code</text>
+  <text class="stage" x="465" y="34" text-anchor="middle">2 Research · AI, parallel</text>
+  <text class="stage" x="675" y="34" text-anchor="middle">3 Verify · code</text>
+  <text class="stage" x="840" y="34" text-anchor="middle">4 Audit · AI</text>
+  <text class="stage" x="1005" y="34" text-anchor="middle">5 Score · code</text>
+  <text class="stage" x="1180" y="34" text-anchor="middle">6 Memo · AI</text>
+
+  <!-- donor -->
+  <rect class="code" x="20" y="120" width="130" height="150" rx="10"/>
+  <text class="t" x="85" y="150" text-anchor="middle">Donor input</text>
+  <text class="s" x="85" y="176" text-anchor="middle">1 to 3 charities</text>
+  <text class="s" x="85" y="196" text-anchor="middle">5 priority weights</text>
+  <text class="s" x="85" y="216" text-anchor="middle">optional note</text>
+  <text class="s" x="85" y="236" text-anchor="middle">budget cap</text>
+  <text class="s" x="85" y="256" text-anchor="middle" fill="#8f5b00">(note screened)</text>
+
+  <!-- intake -->
+  <rect class="code" x="175" y="120" width="150" height="150" rx="10"/>
+  <text class="t" x="250" y="150" text-anchor="middle">Load filings</text>
+  <text class="s" x="250" y="176" text-anchor="middle">Form 990 fields</text>
+  <text class="s" x="250" y="196" text-anchor="middle">→ evidence ids</text>
+  <text class="s" x="250" y="222" text-anchor="middle">17 financial</text>
+  <text class="s" x="250" y="242" text-anchor="middle">metrics computed</text>
+  <text class="s" x="250" y="262" text-anchor="middle">in code</text>
+  <rect class="src" x="185" y="320" width="130" height="46" rx="8"/>
+  <text class="s" x="250" y="340" text-anchor="middle">ProPublica</text>
+  <text class="s" x="250" y="356" text-anchor="middle">990 API (free)</text>
+  <path class="ln" d="M250,320 L250,272" marker-end="url(#arr)"/>
+
+  <!-- research -->
+  <rect class="ai" x="350" y="60" width="230" height="118" rx="10"/>
+  <text class="t" x="365" y="86">Financial Analyst</text>
+  <text class="s" x="365" y="106">reads metrics, explains trends,</text>
+  <text class="s" x="365" y="122">cites evidence ids</text>
+  <text class="tool" x="365" y="144">get_field_history</text>
+  <text class="tool" x="365" y="162">get_metric · compare_years</text>
+  <rect class="ai" x="350" y="196" width="230" height="118" rx="10"/>
+  <text class="t" x="365" y="222">Impact Researcher</text>
+  <text class="s" x="365" y="242">rates outcome evidence 0 to 4,</text>
+  <text class="s" x="365" y="258">mission fit to donor note</text>
+  <text class="tool" x="365" y="280">search_web (max 2)</text>
+  <text class="tool" x="365" y="298">read_page (max 3)</text>
+  <rect class="safe" x="350" y="330" width="230" height="52" rx="8"/>
+  <text class="s" x="465" y="351" text-anchor="middle" font-weight="700" fill="#8f5b00">URL check → sanitizer → injection</text>
+  <text class="s" x="465" y="369" text-anchor="middle" font-weight="700" fill="#8f5b00">filter → untrusted-content wrapper</text>
+  <rect class="src" x="365" y="400" width="200" height="36" rx="8"/>
+  <text class="s" x="465" y="423" text-anchor="middle">Charity website · web search</text>
+  <path class="ln" d="M465,400 L465,384" marker-end="url(#arr)"/>
+  <path class="ln" d="M465,330 L465,316" marker-end="url(#arr)"/>
+  <text class="s" x="465" y="188" text-anchor="middle" font-style="italic" fill="#667085">one pair per charity</text>
+
+  <!-- verify -->
+  <rect class="code" x="605" y="120" width="140" height="150" rx="10"/>
+  <text class="t" x="675" y="150" text-anchor="middle">Claim verifier</text>
+  <text class="s" x="675" y="176" text-anchor="middle">every number in a</text>
+  <text class="s" x="675" y="196" text-anchor="middle">finding must match</text>
+  <text class="s" x="675" y="216" text-anchor="middle">its evidence</text>
+  <text class="s" x="675" y="242" text-anchor="middle" fill="#b42318">no match →</text>
+  <text class="s" x="675" y="260" text-anchor="middle" fill="#b42318">removed, flagged</text>
+
+  <!-- audit -->
+  <rect class="ai" x="770" y="120" width="140" height="150" rx="10"/>
+  <text class="t" x="840" y="150" text-anchor="middle">Red-Team</text>
+  <text class="t" x="840" y="168" text-anchor="middle">Auditor</text>
+  <text class="s" x="840" y="192" text-anchor="middle">challenges findings,</text>
+  <text class="s" x="840" y="210" text-anchor="middle">overclaiming, fairness;</text>
+  <text class="s" x="840" y="228" text-anchor="middle">adds questions</text>
+  <text class="tool" x="840" y="256" text-anchor="middle">get_evidence</text>
+
+  <!-- score -->
+  <rect class="code" x="935" y="120" width="140" height="150" rx="10"/>
+  <text class="t" x="1005" y="150" text-anchor="middle">Scorecard</text>
+  <text class="s" x="1005" y="176" text-anchor="middle">5 dimensions,</text>
+  <text class="s" x="1005" y="196" text-anchor="middle">0 to 100, donor</text>
+  <text class="s" x="1005" y="216" text-anchor="middle">weights applied;</text>
+  <text class="s" x="1005" y="236" text-anchor="middle">documented rubric</text>
+  <text class="s" x="1005" y="256" text-anchor="middle">(a hypothesis)</text>
+
+  <!-- memo -->
+  <rect class="ai" x="1100" y="120" width="160" height="150" rx="10"/>
+  <text class="t" x="1180" y="150" text-anchor="middle">Memo Writer</text>
+  <text class="s" x="1180" y="176" text-anchor="middle">action-title headline,</text>
+  <text class="s" x="1180" y="194" text-anchor="middle">uses verified finding</text>
+  <text class="s" x="1180" y="212" text-anchor="middle">ids only; text checked</text>
+  <text class="s" x="1180" y="230" text-anchor="middle">again for numbers</text>
+  <text class="tool" x="1180" y="256" text-anchor="middle">no tools</text>
+  <rect class="code" x="1110" y="320" width="140" height="46" rx="8" stroke="#0f766e"/>
+  <text class="t" x="1180" y="348" text-anchor="middle" font-size="14">Giving memo</text>
+  <path class="ln" d="M1180,272 L1180,318" marker-end="url(#arr)"/>
+
+  <!-- main flow arrows -->
+  <path class="ln" d="M150,195 L173,195" marker-end="url(#arr)"/>
+  <path class="ln" d="M325,170 L348,120" marker-end="url(#arr)"/>
+  <path class="ln" d="M325,220 L348,255" marker-end="url(#arr)"/>
+  <path class="ln" d="M580,120 L603,170" marker-end="url(#arr)"/>
+  <path class="ln" d="M580,255 L603,220" marker-end="url(#arr)"/>
+  <path class="ln" d="M745,195 L768,195" marker-end="url(#arr)"/>
+  <path class="ln" d="M910,195 L933,195" marker-end="url(#arr)"/>
+  <path class="ln" d="M1075,195 L1098,195" marker-end="url(#arr)"/>
+
+  <!-- evidence ledger band -->
+  <rect x="175" y="455" width="1085" height="36" rx="8" fill="#14213d"/>
+  <text x="717" y="478" text-anchor="middle" font-size="13" fill="#ffffff" font-weight="600">Evidence ledger: every number has an id (PP- IRS field · CALC- calculation · WEB- quoted excerpt) and shows as a source chip</text>
+  <path class="ln dash" d="M250,366 L250,453"/>
+  <path class="ln dash" d="M675,272 L675,453"/>
+  <path class="ln dash" d="M840,272 L840,453"/>
+  <path class="ln dash" d="M1005,272 L1005,453"/>
+  <path class="ln dash" d="M1180,368 L1180,453"/>
+
+  <!-- guardrails -->
+  <text x="640" y="526" text-anchor="middle" font-size="12.5" fill="#3a4560"><tspan font-weight="700" fill="#b42318">Guardrails on every run: </tspan>budget kill switch ($0.10 per run, $2 per day) · request and tool-call limits per agent · 90 s per agent, 240 s per run · rate limit · full audit log</text>
+
+  <!-- legend -->
+  <rect class="ai" x="20" y="400" width="16" height="12" rx="3"/><text class="s" x="42" y="410">AI agent (gpt-6-luna)</text>
+  <rect class="code" x="20" y="420" width="16" height="12" rx="3"/><text class="s" x="42" y="430">deterministic code</text>
+  <rect class="safe" x="20" y="440" width="16" height="12" rx="3"/><text class="s" x="42" y="450">safety filter</text>
+</svg>

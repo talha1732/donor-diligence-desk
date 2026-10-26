@@ -1,0 +1,17 @@
+# Decision log
+
+Newest at the top. One row per meaningful decision.
+
+| Date | Decision | Rationale | Affects |
+|---|---|---|---|
+| 2026-10-26 | Memo and report state that ProPublica's free API lags: the newest filing with extracted data can be a year or more older than the newest PDF filing (MSF USA: FY2024 on the web page, FY2023 in the API). | Research check on 2026-10-26. Donors must know "latest" means latest extracted year. | Memo method note, report limits |
+| 2026-10-26 | Evidence source links use ProPublica's human page `organizations/<ein without leading zeros>`; every metric, including missing ones, gets a CALC evidence entry so agents can cite a gap. | The zero-padded URL 301-redirects; citing a missing metric keeps "never guess" traceable. | financials.py, UI source chips |
+| 2026-10-26 | Scoring thresholds anchored to Charity Navigator's Spring 2026 Rating Methodology Guide where one exists (liabilities to assets 0.30/0.70, working capital 1 to 6 months, fundraising efficiency 0.20/0.50); the rest are labelled hypotheses in `docs/scoring-rubric.md`. | Graders and donors can check the anchors; the rest is honest about being a rubric. | scoring.py |
+| 2026-10-26 | Dev moved to macOS (`.venv-mac/`), line endings normalised to LF with `.gitattributes`, cache files renamed to `org_<ein>.json`. | The Windows venv cannot run on the Mac; CRLF churn hid real diffs; the cache naming bug emptied the featured list. | Whole repo |
+| 2026-10-25 | Builders run as parallel subagents with strict file ownership (AGENTS.md section 4) against a frozen `schemas.py` and stub signatures. | Lets five workstreams proceed at once without edit conflicts; integration happens once, against a known contract. | Whole repo |
+| 2026-10-25 | Program-spending share is always shown as "not in the free IRS extract" and turned into a question for the charity. | ProPublica's free API extract has no Part IX functional expense split, and the e-file XML endpoint returns 403. Estimating it would put an unsourced number in front of donors. | Metrics, scoring, memo |
+| 2026-10-25 | All numbers come from tools (ProPublica fields or deterministic calculations); LLM agents interpret and cite evidence ids; a verifier removes claims whose numbers do not match the ledger. | The main malfunction risk for a diligence memo is an invented figure. Deterministic checks are cheaper and more reliable than asking another model. | Agents, safety, memo |
+| 2026-10-25 | Fixed workflow (intake, parallel specialists, verify, audit, score, memo) instead of a free-roaming boss agent. | Predictable cost per run, no loops, and each stage is testable on its own. Specialists still choose their own tool calls. | Orchestrator |
+| 2026-10-25 | Built frontend (`frontend/dist`) is committed and served by FastAPI. | Staff only need Python to run the app, which protects the 10-minute run rule. | README, run.py |
+| 2026-10-25 | Model: gpt-6-luna on the course Portkey key; build agents run on Claude Opus 5.5 in Cursor. | Course rule allows only luna on the course key; the staff .env has only PORTKEY_API_KEY and OPENAI_API_KEY. | config.py |
+| 2026-10-25 | Idea: Donor Diligence Desk (investment-committee style giving memo from IRS 990 data). | Real users with money at stake, free real data with no extra keys, natural multi-agent split, and a demonstrable prompt-injection and hallucination defense. Chosen over Trial Navigator (harder to test with a real user by the deadline) and Quote Leveler. | Whole project |

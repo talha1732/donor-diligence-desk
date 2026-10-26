@@ -1,0 +1,27 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+.venv/
+.venv-*/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node
+frontend/node_modules/
+
+# ProPublica search responses cached at runtime (org_*.json and demo_*.json are committed)
+backend/data/cache/propublica/search_*.json
+
+# runtime output (sample runs for the report are copied to docs/evidence/)
+output/*
+!output/.gitkeep
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
