@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { RunState, AgentView } from "../runState";
 import { elapsedSeconds } from "../runState";
-import { STAGES } from "../types";
+import { STAGES, type SecurityEvent } from "../types";
 import { ROLE_DUTY, ROLE_TITLES, SECURITY_TITLES, SEVERITY_LABELS, STAGE_HELP, STAGE_LABELS, TOOL_LABELS } from "../labels";
 import { cleanName, fmtCost, fmtInt, fmtSeconds, niceName, truncate } from "../format";
 import { DemoBadge, Notice, Spinner } from "./common";
@@ -355,25 +355,30 @@ export function SecurityPanel({ run, compact }: { run: RunState; compact?: boole
       ) : (
         <ul className="sec-list">
           {run.security.map((e, i) => (
-            <li key={i} className={`sec sec-${e.severity}`}>
-              <div className="sec-head">
-                <span className={`sev sev-${e.severity}`}>{SEVERITY_LABELS[e.severity]}</span>
-                <strong>{SECURITY_TITLES[e.kind] ?? e.kind}</strong>
-              </div>
-              <div className="muted small">
-                {e.agent ? agentTitle(run, e.agent) : e.ein ? charityName(run, e.ein) : "Run"}
-              </div>
-              <p className="sec-detail">{compact ? truncate(plainSecurityDetail(e.detail), 160) : plainSecurityDetail(e.detail)}</p>
-              {e.snippet && (
-                <blockquote className="snippet">
-                  <span className="snippet-label">{SNIPPET_LABELS[e.kind] ?? "Text that was blocked"}</span>
-                  {truncate(e.snippet, 240)}
-                </blockquote>
-              )}
-            </li>
+            <SecurityEventItem key={i} event={e} who={e.agent ? agentTitle(run, e.agent) : e.ein ? charityName(run, e.ein) : "Run"} compact={compact} />
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+/** One safety event, shared by the run log panel and the memo's Safety checks section. */
+export function SecurityEventItem({ event: e, who, compact, className }: { event: SecurityEvent; who: string; compact?: boolean; className?: string }) {
+  return (
+    <li className={`sec sec-${e.severity}${className ? ` ${className}` : ""}`}>
+      <div className="sec-head">
+        <span className={`sev sev-${e.severity}`}>{SEVERITY_LABELS[e.severity]}</span>
+        <strong>{SECURITY_TITLES[e.kind] ?? e.kind}</strong>
+      </div>
+      <div className="muted small">{who}</div>
+      <p className="sec-detail">{compact ? truncate(plainSecurityDetail(e.detail), 160) : plainSecurityDetail(e.detail)}</p>
+      {e.snippet && (
+        <blockquote className="snippet">
+          <span className="snippet-label">{SNIPPET_LABELS[e.kind] ?? "Text that was blocked"}</span>
+          {truncate(e.snippet, 240)}
+        </blockquote>
+      )}
+    </li>
   );
 }

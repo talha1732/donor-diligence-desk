@@ -48,6 +48,13 @@ After a live run finishes the address bar changes to `?run=<run_id>&tab=...`, so
    - **Try different priorities**: five weight sliders under the at-a-glance table re-rank the charities instantly in the browser (`src/reweight.ts` mirrors `backend/app/tools/scoring.py`: weighted mean, all-zero weights count equally, `band_for` thresholds and the insufficient-data rule). No AI calls. Print shows the original priorities only.
    - **Revenue and expenses chart** per charity (`src/components/TrendChart.tsx`): up to the 5 most recent tax years from the `PP-<ein>-<year>-total_revenue` / `total_expenses` ledger entries, deficit years marked, each point opens its evidence entry. Hidden when fewer than 2 years exist.
    - **Draft an email to the charity** (`src/components/EmailDraft.tsx`): a fixed, editable template with the questions, "Copy email" and a `mailto:` link. Hidden in print.
+   - **Compare all charities** (2 or more): one radar with every charity overlaid (`ComparisonRadar` in `src/components/SpiderChart.tsx`, same gap rule as the per-charity charts), with a legend of names, overall scores, and each charity's strongest and weakest dimension.
+   - **Numbers verified** badge on findings whose audit check (`audit.verification.checks`) is `verified`.
+   - **Safety checks** section near the end of the memo: defenses on or off, a count by severity, and the same event cards as the run log (first 6 on screen with "Show all", every event in print).
+
+The header shows where the data comes from (Live data, Saved run, or Sample data) and the model.
+
+Live runs recover on their own if the stream goes quiet or closes before the `final` event (`src/recover.ts`). After 20 seconds without an event, or as soon as the stream closes early, the app checks `GET /api/runs` every 5 seconds (for up to 240 seconds, the server's run timeout). Once the run is listed, it loads `/api/runs/<run_id>` and its event log into the same state the `final` event would have produced. The "connection closed" error only appears if the run is never saved.
 
 The evidence ledger tab lists every evidence entry with filters. Source chips anywhere open a side drawer with the entry, its formula or quote, its inputs (as further chips), and its source link.
 

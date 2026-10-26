@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AgentUsage, CharityScorecard, CharitySection, DiligenceResult, Finding, Weights } from "../types";
+import type { AgentUsage, CharityScorecard, CharitySection, DiligenceResult, Finding, SecurityEvent, Weights } from "../types";
 import { DIMENSIONS, DIMENSION_LABELS, IMPACT_EVIDENCE_LEVELS } from "../types";
 import { BAND_LABELS, DIMENSION_HELP, IMPORTANCE, ROLE_TITLES, agentRole } from "../labels";
 import { cleanName, fmtCost, fmtDateTime, fmtEin, fmtInt, fmtSeconds, niceName } from "../format";
 import { inferHasFilings, rescore, sameWeights, type Rescored } from "../reweight";
 import { BandBadge, DemoBadge, Notice, OrgName, SourceChips } from "./common";
-import { SpiderChart } from "./SpiderChart";
+import { ComparisonRadar, SeriesMarker, SpiderChart } from "./SpiderChart";
+import { SecurityEventItem } from "./LiveRun";
 import { TrendChart } from "./TrendChart";
 import { EmailDraft } from "./EmailDraft";
 
@@ -55,6 +56,10 @@ export function MemoView({ result, onShowRunLog }: Props) {
     // sections and cards derive from result.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result, weights, changed]);
+  const verified = useMemo(
+    () => new Set((result.audit?.verification.checks ?? []).filter((c) => c.status === "verified").map((c) => c.finding_id)),
+    [result],
+  );
   const nameFor = (agent: string) => {
     const ein = agent.split(":")[1];
     const org = result.orgs.find((o) => o.ein === ein);
@@ -111,6 +116,9 @@ export function MemoView({ result, onShowRunLog }: Props) {
 
         <section className="memo-block">
           <h2>At a glance</h2>
+          {sections.filter((s) => cards.has(s.ein)).length >= 2 && (
+            <CompareCharities sections={sections.filter((s) => cards.has(s.ein))} cards={cards} scores={scores} changed={changed} />
+          )}
           {changed ? (
             <>
               <div className="no-print">
@@ -133,7 +141,16 @@ export function MemoView({ result, onShowRunLog }: Props) {
         </section>
 
         {sections.map((s) => (
-          <CharityBlock key={s.ein} section={s} card={cards.get(s.ein)} result={result} score={scores.get(s.ein)!} weights={weights} changed={changed} />
+          <CharityBlock
+            key={s.ein}
+            section={s}
+            card={cards.get(s.ein)}
+            result={result}
+            score={scores.get(s.ein)!}
+            weights={weights}
+            changed={changed}
+            verified={verified}
+          />
         ))}
 
         {result.audit && result.audit.auditor_notes.length > 0 && (
@@ -150,6 +167,8 @@ export function MemoView({ result, onShowRunLog }: Props) {
             </p>
           </section>
         )}
+
+        <SafetyChecks result={result} nameFor={nameFor} />
 
         <section className="memo-block">
           <h2>What this memo cost</h2>
@@ -363,6 +382,7 @@ function CharityBlock({
   score,
   weights,
   changed,
+  verified,
 }: {
   section: CharitySection;
   card?: CharityScorecard;
@@ -370,6 +390,7 @@ function CharityBlock({
   score: { now: Rescored; orig: Rescored };
   weights: Weights;
   changed: boolean;
+  verified: Set<string>;
 }) {
   const org = result.orgs.find((o) => o.ein === section.ein);
   const impact = result.reports.find((r) => r.ein === section.ein && r.role === "impact")?.impact;
@@ -460,8 +481,8 @@ function CharityBlock({
       )}
 
       <div className="two-col">
-        <FindingList title="Strengths" tone="strength" findings={section.strengths} empty="No verified strengths." />
-        <FindingList title="Concerns" tone="concern" findings={section.concerns} empty="No verified concerns." />
+        <FindingList title="Strengths" tone="strength" findings={section.strengths} empty="No verified strengths." verified={verified} />
+        <FindingList title="Concerns" tone="concern" findings={section.concerns} empty="No verified concerns." verified={verified} />
       </div>
 
       <div className="two-col">
@@ -499,7 +520,19 @@ function CharityBlock({
 
 const DIM_SHORT: Record<string, string> = { ...DIMENSION_LABELS, mission_fit: "Mission fit", other: "Other" };
 
-function FindingList({ title, tone, findings, empty }: { title: string; tone: "strength" | "concern"; findings: Finding[]; empty: string }) {
+function FindingList({
+  title,
+  tone,
+  findings,
+  empty,
+  verified,
+}: {
+  title: string;
+  tone: "strength" | "concern";
+  findings: Finding[];
+  empty: string;
+  verified: Set<string>;
+}) {
   return (
     <div>
       <h3 className={`list-title list-${tone}`}>{title}</h3>
@@ -509,7 +542,10 @@ function FindingList({ title, tone, findings, empty }: { title: string; tone: "s
         <ul className={`findings findings-${tone}`}>
           {findings.map((f) => (
             <li key={f.id}>
-              <span className="finding-dim">{DIM_SHORT[f.dimension] ?? f.dimension}</span>
+              <div className="finding-top">
+                <span className="finding-dim">{DIM_SHORT[f.dimension] ?? f.dimension}</span>
+                {verified.has(f.id) && <VerifiedBadge />}
+              </div>
               <p>{f.text}</p>
               <SourceChips ids={f.evidence_ids} />
             </li>
@@ -517,6 +553,161 @@ function FindingList({ title, tone, findings, empty }: { title: string; tone: "s
         </ul>
       )}
     </div>
+  );
+}
+
+function VerifiedBadge() {
+  return (
+    <span className="verified-badge" title="Every number in this finding matched the evidence ledger">
+      <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden>
+        <path d="M2.2 6.3l2.4 2.4 5.2-5.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      Numbers verified
+    </span>
+  );
+}
+
+/** Dimension names joined in plain English. */
+function joinLabels(parts: string[]): string {
+  if (parts.length <= 1) return parts.join("");
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
+/** "Strongest: Cost discipline (96). Weakest: Impact evidence (50)." from the scorecard, ties listed together. */
+function profileLine(card: CharityScorecard): string {
+  const scored = DIMENSIONS.map((d) => ({ d, s: card.dimensions.find((x) => x.dimension === d)?.score })).filter(
+    (x): x is { d: (typeof DIMENSIONS)[number]; s: number } => x.s !== null && x.s !== undefined,
+  );
+  const missing = DIMENSIONS.filter((d) => !scored.some((x) => x.d === d)).map((d) => DIMENSION_LABELS[d]);
+  const parts: string[] = [];
+  if (scored.length > 1) {
+    const rounded = scored.map((x) => ({ ...x, r: Math.round(x.s) }));
+    const hi = Math.max(...rounded.map((x) => x.r));
+    const lo = Math.min(...rounded.map((x) => x.r));
+    if (hi !== lo) {
+      const label = (v: number) => joinLabels(rounded.filter((x) => x.r === v).map((x) => DIMENSION_LABELS[x.d]));
+      parts.push(`Strongest: ${label(hi)} (${hi}).`, `Weakest: ${label(lo)} (${lo}).`);
+    } else {
+      parts.push(`Every scored dimension is ${hi}.`);
+    }
+  }
+  if (missing.length) parts.push(`No data: ${joinLabels(missing)}.`);
+  return parts.join(" ");
+}
+
+function CompareCharities({ sections, cards, scores, changed }: { sections: CharitySection[]; cards: Map<string, CharityScorecard>; scores: ScoreMap; changed: boolean }) {
+  const series = sections.map((s) => ({ key: s.ein, name: displayName(s.name, s.is_demo), dimensions: cards.get(s.ein)!.dimensions }));
+  return (
+    <div className="compare">
+      <figure className="spider-wrap compare-figure">
+        <ComparisonRadar series={series} title="All charities on the shared 0 to 100 scale" />
+        <figcaption className="muted small">Shared 0 to 100 scale. Gaps mean no data, not zero.</figcaption>
+      </figure>
+      <div className="compare-side">
+        <div className="eyebrow">How the charities compare</div>
+        <ul className="compare-legend">
+          {sections.map((s, slot) => {
+            const sc = scores.get(s.ein)!;
+            return (
+              <li key={s.ein} className={`compare-item series-${slot}`}>
+                <svg className="compare-key" width="34" height="14" viewBox="0 0 34 14" aria-hidden>
+                  <line x1="2" y1="7" x2="32" y2="7" className="edge" />
+                  <g className="point">
+                    <SeriesMarker slot={slot} x={17} y={7} size={slot === 2 ? 3.4 : 3.8} />
+                  </g>
+                </svg>
+                <div className="compare-text">
+                  <div className="compare-name">
+                    <OrgName name={s.name} isDemo={s.is_demo} />
+                  </div>
+                  <div className="compare-detail">{profileLine(cards.get(s.ein)!)}</div>
+                </div>
+                <div className="compare-score">
+                  <ScreenPrint
+                    changed={changed}
+                    screen={
+                      <span className="compare-stack">
+                        <span className="compare-num">{fmtScore(sc.now.overall)}</span>
+                        <span className="compare-of">was {fmtScore(sc.orig.overall)}</span>
+                      </span>
+                    }
+                    print={
+                      <span className="compare-stack">
+                        <span className="compare-num">{fmtScore(sc.orig.overall)}</span>
+                        <span className="compare-of">overall</span>
+                      </span>
+                    }
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="muted small compare-note">
+          Each shape is one charity. A larger shape means higher scores across the five dimensions. The shapes do not depend
+          on your priorities; only the overall score does.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const SAFETY_PREVIEW = 6;
+
+function safetySummary(events: SecurityEvent[]): string {
+  const n = events.length;
+  if (n === 0) return "No defenses fired in this run.";
+  const counts = (["blocked", "warning", "info"] as const).map((sev) => ({ sev, k: events.filter((e) => e.severity === sev).length })).filter((c) => c.k > 0);
+  const one = { blocked: "blocked", warning: "a warning", info: "informational" };
+  const all = { blocked: "all blocked", warning: "all warnings", info: "all informational" };
+  const some = (c: { sev: SecurityEvent["severity"]; k: number }) =>
+    c.sev === "blocked" ? `${c.k} blocked` : c.sev === "warning" ? `${c.k} ${c.k === 1 ? "warning" : "warnings"}` : `${c.k} informational`;
+  if (n === 1) return `1 defense fired (${one[counts[0].sev]}).`;
+  if (counts.length === 1) return `${n} defenses fired, ${all[counts[0].sev]}.`;
+  return `${n} defenses fired: ${counts.map(some).join(", ")}.`;
+}
+
+function SafetyChecks({ result, nameFor }: { result: DiligenceResult; nameFor: (agent: string) => string }) {
+  const [showAll, setShowAll] = useState(false);
+  const events = result.security_events ?? [];
+  const who = (e: SecurityEvent) => {
+    if (e.agent) {
+      const name = nameFor(e.agent);
+      return `${ROLE_TITLES[agentRole(e.agent)]}${name ? `, ${name}` : ""}`;
+    }
+    if (e.ein) {
+      const org = result.orgs.find((o) => o.ein === e.ein);
+      return org ? displayName(org.name, org.is_demo) : `EIN ${e.ein}`;
+    }
+    return "Run";
+  };
+  const hidden = events.length - SAFETY_PREVIEW;
+  return (
+    <section className="memo-block safety-block">
+      <header className="safety-head">
+        <h2>Safety checks</h2>
+        <span className={`pill ${result.defenses_on ? "pill-ok" : "pill-bad"}`}>{result.defenses_on ? "Defenses on" : "Defenses off"}</span>
+      </header>
+      <p className="safety-summary">
+        <strong>{safetySummary(events)}</strong>{" "}
+        {result.defenses_on
+          ? "Every run checks web pages for hidden text and instructions aimed at the AI, blocks unsafe links, removes claims whose numbers do not match the evidence ledger, and stops at the spending cap."
+          : "Defenses were off for this run (safety demonstration), so web text and unverified claims were not filtered."}
+      </p>
+      {events.length > 0 && (
+        <ul className="sec-list sec-grid">
+          {events.map((e, i) => (
+            <SecurityEventItem key={i} event={e} who={who(e)} className={!showAll && i >= SAFETY_PREVIEW ? "sec-extra" : undefined} />
+          ))}
+        </ul>
+      )}
+      {hidden > 0 && (
+        <button className="btn-link safety-toggle no-print" type="button" onClick={() => setShowAll((v) => !v)} aria-expanded={showAll}>
+          {showAll ? "Show fewer" : `Show all ${events.length}`}
+        </button>
+      )}
+    </section>
   );
 }
 

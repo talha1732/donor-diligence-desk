@@ -3,6 +3,7 @@ import { ApiError, liveApi, mockApi } from "./api";
 import type { DiligenceRequest, Health, OrgSearchResult, RunEvent, Weights } from "./types";
 import { initialRunState, runReducer } from "./runState";
 import { playEvents, type Player } from "./player";
+import { STALL_MS, pollSavedRun, recoveryEvents } from "./recover";
 import { MOCK_ORGS, SAMPLE_EVENTS } from "./mock/sampleEvents";
 import { cleanName, niceName } from "./format";
 import { ChooseScreen, MAX_CHARITIES, type Selected } from "./components/ChooseScreen";
@@ -76,6 +77,9 @@ export default function App() {
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<string[]>([]);
+  // Saved or replayed runs are stored data; a live run started from this page is live again.
+  const [reconnecting, setReconnecting] = useState(false);
+  const [viewingSaved, setViewingSaved] = useState(() => !params.mock && !!(params.run || params.replay));
   const playerRef = useRef<Player | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -186,6 +190,7 @@ export default function App() {
     };
     playerRef.current?.cancel();
     abortRef.current?.abort();
+    setViewingSaved(false);
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     setReplaying(false);
@@ -194,15 +199,57 @@ export default function App() {
     dispatch({ type: "connecting" });
     let sawAny = false;
     let sawEnd = false;
+    let recovered = false;
+    let runId: string | null = null;
+    let lastEventAt = Date.now();
+    let streamOpen = true;
+    let recovery: Promise<boolean> | null = null;
+    const closedMessage = "The connection closed before the run finished. If the server is still running, the run may appear under Past runs.";
+
+    // If the stream goes quiet or closes without `final`, load the run the server saved and rebuild the screen
+    // from it, exactly as the final event would have. Only one poll loop runs at a time.
+    const recover = (): Promise<boolean> =>
+      (recovery ??= (async () => {
+        const id = runId!;
+        const saved = await pollSavedRun(api, id, ctrl.signal, {
+          keepGoing: () => !sawEnd && (!streamOpen || Date.now() - lastEventAt >= STALL_MS),
+          direct: () => !streamOpen,
+        });
+        recovery = null;
+        if (saved && !sawEnd && !ctrl.signal.aborted) {
+          sawEnd = true;
+          recovered = true;
+          const { reset, events } = recoveryEvents(saved);
+          if (reset) dispatch({ type: "reset" });
+          dispatch({ type: "batch", events });
+          ctrl.abort(); // nothing more is needed from the quiet stream
+          return true;
+        }
+        if (!saved && streamOpen && !sawEnd && !ctrl.signal.aborted && Date.now() - lastEventAt >= STALL_MS) {
+          // Quiet for longer than the server's run timeout and never saved: stop waiting.
+          sawEnd = true;
+          ctrl.abort();
+          dispatch({ type: "fail", message: "The run stopped sending updates and was not saved in time. If the server is still running, the run may appear under Past runs." });
+        }
+        return false;
+      })());
+
+    const watchdog = window.setInterval(() => {
+      if (!sawEnd && runId && streamOpen && !recovery && Date.now() - lastEventAt >= STALL_MS) void recover();
+    }, 1000);
+
     try {
       const streamDone = api.stream(
         req,
         (e) => {
+          if (recovered) return;
+          lastEventAt = Date.now();
           if (!sawAny) {
             sawAny = true;
             setStarting(false);
             setView("run");
           }
+          if (e.type === "run_started") runId = e.data.run_id;
           if (e.type === "final" || e.type === "error") sawEnd = true;
           dispatch({ type: "event", event: e });
         },
@@ -210,10 +257,14 @@ export default function App() {
       );
       setView("run");
       await streamDone;
+      streamOpen = false;
       if (!sawEnd && !ctrl.signal.aborted) {
-        dispatch({ type: "fail", message: "The connection closed before the run finished. If the server is still running, the run may appear under Past runs." });
+        setReconnecting(!!runId);
+        const ok = runId ? await (recovery ?? recover()) : false;
+        if (!ok && !sawEnd && !ctrl.signal.aborted) dispatch({ type: "fail", message: closedMessage });
       }
     } catch (e) {
+      streamOpen = false;
       if (ctrl.signal.aborted) return;
       const msg = (e as Error).message;
       if (!sawAny) {
@@ -221,9 +272,13 @@ export default function App() {
         setView("priorities");
         setStartError(msg);
       } else {
-        dispatch({ type: "fail", message: msg });
+        setReconnecting(!!runId && !sawEnd);
+        const ok = runId && !sawEnd ? await (recovery ?? recover()) : false;
+        if (!ok && !sawEnd && !ctrl.signal.aborted) dispatch({ type: "fail", message: msg });
       }
     } finally {
+      window.clearInterval(watchdog);
+      setReconnecting(false);
       setStarting(false);
     }
   };
@@ -254,6 +309,15 @@ export default function App() {
   ];
   const activeStep = view === "evidence" ? 0 : steps.find((s) => s.view === view)?.n ?? 0;
 
+  const model = run.result?.usage.model ?? run.model ?? health?.model ?? null;
+  const dataMode = params.mock
+    ? { label: "Sample data", tone: "pill", help: "Mock mode: a bundled sample run replays in your browser. No server or AI calls." }
+    : viewingSaved
+      ? { label: "Saved run", tone: "pill", help: "You are viewing a stored run. Nothing is sent to the model." }
+      : health?.offline_mode
+        ? { label: "Offline data", tone: "pill pill-warn", help: "Offline mode: IRS data comes from the bundled cache, not the live ProPublica API." }
+        : { label: "Live data", tone: "pill pill-live", help: "Searches and new runs use the live ProPublica Nonprofit Explorer API and the model." };
+
   const goRun = (runId: string) => {
     const p = new URLSearchParams();
     if (params.mock) p.set("mock", "1");
@@ -276,6 +340,12 @@ export default function App() {
               </span>
             </a>
             <nav className="topnav">
+              <span className="topmeta">
+                <span className={`${dataMode.tone} mode-pill`} title={dataMode.help}>
+                  {dataMode.label}
+                </span>
+                {model && <span className="topmodel">Model: {model}</span>}
+              </span>
               <button className={`btn btn-ghost${view === "runs" ? " is-active" : ""}`} type="button" onClick={() => setView("runs")}>
                 Past runs
               </button>
@@ -398,7 +468,21 @@ export default function App() {
             />
           )}
           {view === "run" && hasRun && (
-            <LiveRun run={run} replaying={replaying} onSkip={skip} onOpenMemo={() => setView("memo")} onCancel={api.mock || replaying ? undefined : stopWatching} />
+            <LiveRun
+              run={run}
+              replaying={replaying}
+              onSkip={skip}
+              onOpenMemo={() => setView("memo")}
+              onCancel={api.mock || replaying ? undefined : stopWatching}
+              modeNote={
+                reconnecting && run.status === "running" ? (
+                  <Notice tone="info" title="Reconnecting">
+                    <Spinner /> The live connection closed before the last update. Checking every few seconds whether the server
+                    saved the finished run (up to 4 minutes).
+                  </Notice>
+                ) : undefined
+              }
+            />
           )}
           {view === "run" && !hasRun && !loading && !loadError && <EmptyRun onStart={() => setView("choose")} />}
           {view === "memo" &&
