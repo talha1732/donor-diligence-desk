@@ -7,7 +7,9 @@ charity.
 
 Yale SOM MGT 409 (AI Foundations for Managers) final project, Talha Javed, October 2026.
 
-![Memo screen](docs/img/memo.png)
+![A giving memo produced by the app](docs/report/img/walk-5-memo-top.webp)
+
+Report: [`report.html`](report.html) · Slides: [`slides.html`](slides.html) (both open by double-click)
 
 ## Run it locally (about 3 minutes)
 
@@ -25,18 +27,25 @@ pip install -r backend/requirements.txt
 python backend/run.py
 ```
 
-**Windows (PowerShell)**
+**Windows (PowerShell)** (no activation step, so the execution policy does not matter)
 
 ```powershell
 git clone https://github.com/talha1732/donor-diligence-desk.git
 cd donor-diligence-desk
 py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r backend\requirements.txt
-python backend\run.py
+.\.venv\Scripts\python -m pip install -r backend\requirements.txt
+.\.venv\Scripts\python backend\run.py
 ```
 
 Then open **http://127.0.0.1:8000**. Stop the server with Ctrl+C.
+
+**If something goes wrong**
+
+- `python3 --version` shows 3.10 or older (the macOS default is 3.9): install Python 3.12 from
+  [python.org](https://www.python.org/downloads/) and use `python3.12 -m venv .venv`.
+- Port 8000 is busy: add `PORT=8001` to `.env` (or run `PORT=8001 python backend/run.py`) and open that port.
+- The start-up message says no key was found: put `PORTKEY_API_KEY=...` in a `.env` in the repo folder or the
+  folder above it, then restart. The saved sample memos under **Past runs** work without a key.
 
 ### API key
 

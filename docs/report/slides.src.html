@@ -12,7 +12,7 @@
     --accent: #0f766e; --accent-soft: #e7f4f2; --warn: #8f5b00; --warn-bg: #fdf3df; --bad: #b42318; --bad-bg: #fdeceb;
     --r-background-color: #ffffff; --r-main-color: #14213d; --r-heading-color: #14213d;
     --r-main-font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, Arial, sans-serif;
-    --r-heading-font: Georgia, "Times New Roman", serif; --r-link-color: #0f766e; --r-main-font-size: 30px;
+    --r-heading-font: Georgia, "Times New Roman", serif; --r-link-color: #0f766e; --r-main-font-size: 34px;
   }
   .reveal h1, .reveal h2, .reveal h3 { text-transform: none; font-weight: 700; letter-spacing: 0; }
   .reveal h1 { font-size: 2.3em; } .reveal h2 { font-size: 1.45em; margin-bottom: .45em; } .reveal h3 { font-size: 1.0em; }
@@ -20,26 +20,26 @@
   .reveal .eyebrow { font-family: var(--r-main-font); font-size: .5em; font-weight: 700; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; margin-bottom: .3em; }
   .reveal p, .reveal li { line-height: 1.35; }
   .reveal ul { margin-left: 1em; } .reveal li { margin-bottom: .35em; }
-  .reveal .small { font-size: .62em; color: var(--ink-2); }
-  .reveal .tiny { font-size: .45em; color: var(--muted); }
+  .reveal .small { font-size: .74em; color: var(--ink-2); }
+  .reveal .tiny { font-size: .5em; color: var(--muted); }
   .reveal .big { font-family: Georgia, serif; font-size: 1.9em; font-weight: 700; color: var(--accent); line-height: 1; }
   .reveal .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
   .reveal .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .reveal .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .reveal .card { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: #fff; }
-  .reveal .card .l { font-size: .55em; color: var(--ink-2); margin-top: .35em; line-height: 1.3; }
+  .reveal .card .l { font-size: .62em; color: var(--ink-2); margin-top: .35em; line-height: 1.3; }
   .reveal .card.accent { background: var(--accent-soft); border-color: #9fd1ca; }
   .reveal .card.warn { background: var(--warn-bg); border-color: #e8c766; }
-  .reveal img.shot { border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px rgba(20,33,61,.12); margin: 0; max-height: 560px; }
-  .reveal .cap { font-size: .45em; color: var(--muted); margin-top: .4em; }
-  .reveal table { font-size: .52em; border-collapse: collapse; width: 100%; }
+  .reveal img.shot { border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px rgba(20,33,61,.12); margin: 0; max-height: 560px; width: 100%; object-fit: contain; object-position: top; }
+  .reveal .cap { font-size: .5em; color: var(--muted); margin-top: .4em; }
+  .reveal table { font-size: .62em; border-collapse: collapse; width: 100%; }
   .reveal table th, .reveal table td { border-bottom: 1px solid var(--line); padding: .35em .5em; text-align: left; }
   .reveal table th { color: var(--ink-2); background: var(--soft); }
   .reveal td.n, .reveal th.n { text-align: right; font-variant-numeric: tabular-nums; }
   .reveal .bar { height: 6px; background: var(--navy); width: 120px; margin: 18px 0 22px; }
   .reveal .footer-note { position: absolute; bottom: -40px; left: 0; font-size: .38em; color: var(--muted); }
   .reveal .yes { color: #17734a; font-weight: 700; } .reveal .no { color: var(--bad); font-weight: 700; }
-  .reveal svg { width: 100%; height: auto; }
+  .reveal svg { width: 100%; height: auto; max-height: 470px; }
 </style>
 </head>
 <body>
@@ -47,11 +47,16 @@
 
 <!-- 1. Title -->
 <section>
-  <div class="eyebrow">MGT 409 · Final project</div>
-  <h1>Donor Diligence Desk</h1>
-  <div class="bar"></div>
-  <p style="font-size:1.05em">A one-minute, investment-committee style giving memo for any US charity, written by AI agents that are not allowed to invent a number.</p>
-  <p class="small" style="margin-top:1.4em">Talha Javed · October 26, 2026 · <a href="https://github.com/talha1732/donor-diligence-desk">github.com/talha1732/donor-diligence-desk</a></p>
+  <div class="grid2" style="grid-template-columns: 1fr 1.05fr; align-items:center; gap:40px">
+    <div>
+      <div class="eyebrow">MGT 409 · Final project</div>
+      <h1 style="font-size:2.1em">Donor Diligence Desk</h1>
+      <div class="bar"></div>
+      <p>A two-minute, investment-committee style giving memo for any US charity, written by AI agents that are not allowed to invent a number.</p>
+      <p class="small" style="margin-top:1.2em">Talha Javed · October 26, 2026<br><a href="https://github.com/talha1732/donor-diligence-desk">github.com/talha1732/donor-diligence-desk</a></p>
+    </div>
+    <div><img class="shot" src="{{img:walk-5-memo-top.webp}}" alt="A giving memo"></div>
+  </div>
 </section>
 
 <!-- 2. Problem -->
@@ -86,15 +91,15 @@
 <section>
   <div class="eyebrow">How it works</div>
   <h2>Four AI agents between code that handles every number</h2>
-  {{svg:architecture.svg}}
-  <p class="small">Fixed pipeline, not a free-roaming boss agent: predictable cost, no loops, every stage testable. gpt-6-luna for reading and judging; Python for arithmetic and checking.</p>
+  <p class="small" style="margin-bottom:.4em">A fixed pipeline, not a free-roaming boss agent: predictable cost, no loops, every stage testable. gpt-6-luna reads and judges; Python does the arithmetic and the checking.</p>
+  <div style="max-height:470px; overflow:hidden">{{svg:architecture.svg}}</div>
 </section>
 
 <!-- 5. Demo -->
 <section>
   <div class="eyebrow">Demo: one real run</div>
   <h2>Pick charities, set priorities, watch six agents work</h2>
-  <div class="grid2" style="grid-template-columns: 0.8fr 1.2fr">
+  <div class="grid2" style="grid-template-columns: 0.75fr 1.25fr; align-items:center">
     <ul class="small">
       <li>Real run: Connecticut Foodshare, Columbus House, IRIS for a New Haven donor</li>
       <li>Six specialists in parallel read 990 data and websites: 29 tool calls</li>
@@ -125,7 +130,7 @@
   <div class="eyebrow">Cost to run</div>
   <h2>Less than a cent per memo, measured</h2>
   <div class="grid4">
-    <div class="card accent"><div class="big">$0.006</div><div class="l">typical 2-charity memo: 60K input tokens (70% cached), 7K output, about 1 minute</div></div>
+    <div class="card accent"><div class="big">$0.006</div><div class="l">typical 2-charity memo: 60K input tokens (70% cached), 7K output, 45 to 62 seconds</div></div>
     <div class="card"><div class="big">$0.03</div><div class="l">per donor per month (5 memos)</div></div>
     <div class="card"><div class="big">$3</div><div class="l">per month for 100 donors</div></div>
     <div class="card"><div class="big">$315</div><div class="l">per month for 10,000 donors (model only)</div></div>
@@ -194,7 +199,7 @@
 </div></div>
 <script>{{reveal_js}}</script>
 <script>
-  Reveal.initialize({ hash: true, controls: true, progress: true, center: false, width: 1280, height: 760, margin: 0.06,
+  Reveal.initialize({ hash: true, controls: true, progress: true, center: true, width: 1280, height: 760, margin: 0.05,
                       transition: "slide", slideNumber: "c/t" });
 </script>
 </body>
