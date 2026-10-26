@@ -108,7 +108,7 @@
   <b>Model</b><span><code>gpt-6-luna</code> through the course Portkey key, as the course rules require</span>
 </div>
 
-<p class="oneliner"><b>What it does:</b> a donor picks one to three charities and says what matters to them; AI agents read the charities' IRS Form 990 filings and websites, every number is checked against its source, and the donor gets a short memo with a clear recommendation, a 0 to 100 scorecard, and the questions to ask each charity before giving.</p>
+<p class="oneliner"><b>What it does:</b> a donor picks one to three charities and says what matters to them; AI agents read the charities' IRS Form 990 filings and websites, every number the agents cite is checked against its source, and the donor gets a short memo with a clear recommendation, a 0 to 100 scorecard, and the questions to ask each charity before giving.</p>
 
 <div class="kpis">
   <div class="kpi"><div class="v">$0.006</div><div class="l">model cost of a typical two-charity memo, measured from real runs</div></div>
@@ -165,6 +165,7 @@
   <li><b>Works for local charities.</b> Any charity with Form 990 data on ProPublica, including local organizations that rating sites skip (Charity Navigator rates about 15% of 501(c)(3)s).</li>
   <li><b>Safe to point at the open web.</b> Charity websites are untrusted input. Hidden text and instructions aimed at AI are removed before any model reads a page.</li>
 </ol>
+<p><b>Example, same charity.</b> Charity Navigator rates Connecticut Foodshare 89%, a three-star charity, mostly from accountability checks and Form 990 ratios the free data lacks. The memo rates it a fit with questions (68) because of two years of deficits and expenses growing faster than revenue, weighted to the donor, and turns those into questions to ask.</p>
 <p><b>Where it is weaker:</b> no human analyst, no audited statements or Form 990 Part IX functional expenses (not in the free data), impact evidence limited to what a charity publishes, and ProPublica's free data runs about a year behind the newest filings.</p>
 
 <!-- ===================================================================== 4. The agents -->
@@ -288,7 +289,6 @@
   <li><b>Code does the arithmetic.</b> The 17 metrics are computed once in Python and given to the agents as short lines with evidence ids, instead of pasting raw filings (about 25 KB of JSON per charity) into prompts and asking the model to calculate.</li>
   <li><b>Prompt caching.</b> Each agent's long instructions (about 2,000 to 2,300 tokens) come first and never change between calls, so OpenAI serves them from cache at a tenth of the price. Measured: 68% of input tokens were cached. Without caching, the five runs above would have cost <b>$0.055 instead of $0.036</b>: caching cut the model bill by about a third.</li>
   <li><b>Hard caps on browsing.</b> At most 2 searches and 3 pages per charity, and only the first 6,000 characters of each sanitized page.</li>
-  <li><b>A small model, no tools for the writer,</b> and a per-agent request limit, so no agent can wander.</li>
   <li><b>A budget kill switch.</b> Each run stops at $0.10 by default (the donor can set up to $0.50) and the server refuses to start a run that could take the day's total past $2.00.</li>
 </ol>
 
@@ -392,12 +392,12 @@ test_tools.py::test_unreadable_website_leaves_impact_unscored_not_zero       PAS
   <tr><td>Write notes, a recommendation and questions</td><td class="n">3 x 10 min</td><td class="n">about 45 s (audit and memo)</td></tr>
   <tr class="total"><td>Three-charity decision</td><td class="n">3 to 6 hours</td><td class="n">about 2 minutes + reading time</td></tr>
 </table>
-<p class="small">The manual column is our estimate (60 to 120 minutes per charity, built step by step in <code>docs/research.md</code>). It is conservative next to the professionals: foundation grantmakers research 9 of 10 grants and spend a median of 4 hours on each (Money for Good II, Hope Consulting, 2011). The app column is measured: three-charity runs took 40 to 115 seconds (median 71).</p>
+<p class="small">The manual column is our estimate (60 to 120 minutes per charity, built step by step in <code>docs/research.md</code>). A walkthrough of the free tools shows why: ProPublica lists two organizations named "Connecticut Foodshare Inc", and the right one has a page about 30 screens long with about 19 figures per year but no multi-year ratios, so a donor copies about 24 figures for three years before computing anything (<code>docs/evidence/manual-baseline.md</code>). It is conservative next to the professionals: foundation grantmakers research 9 of 10 grants and spend a median of 4 hours on each (Money for Good II, Hope Consulting, 2011). The app column is measured: three-charity runs took 40 to 115 seconds (median 71).</p>
 
 <h3>Money, quality and reach</h3>
 <ul>
   <li><b>Cost per decision:</b> about $0.01 of model time against $108 to $217 of a donor's time at Independent Sector's $36.14 an hour.</li>
-  <li><b>Quality:</b> every number in the memo traces to a source and was checked by code; the IRS figures match audited financial statements within 5% for 30 of 30 values (27 within 2%), and 21 more match ProPublica's published 990 figures exactly; the audit gaps come from GAAP versus Form 990 presentation, not extraction errors. Each memo ends with specific questions that donors rarely ask today.</li>
+  <li><b>Quality:</b> every figure in the memo's findings traces to a source and was checked by code; the IRS figures match audited financial statements within 5% for 30 of 30 values (27 within 2%), and 21 more match ProPublica's published 990 figures exactly; the audit gaps come from GAAP versus Form 990 presentation, not extraction errors. Each memo ends with specific questions that donors rarely ask today.</li>
   <li><b>Reach:</b> it works for any of the charities in ProPublica's Form 990 data, including local organizations that rating sites skip (Charity Navigator rates about 15% of 501(c)(3)s).</li>
   <li><b>Something that was impractical before is now routine:</b> a giving circle can bring a sourced, comparable memo on every candidate charity to its December meeting. At about 4,000 giving circles making one three-charity decision a year, that is roughly 18,000 hours of volunteer time, or about $0.65 million at $36.14 an hour (illustrative, not a forecast).</li>
 </ul>
@@ -411,7 +411,7 @@ test_tools.py::test_unreadable_website_leaves_impact_unscored_not_zero       PAS
   <li><b>AI judgments vary between runs.</b> On the same data, IRIS's impact level was 0 in three runs and 2 in two, moving its overall score by about 10 points; and when a site cannot be read, transparency is scored on filings alone (IRIS: 100). The memo shows the evidence behind each judgment so a donor can see why.</li>
   <li><b>The scoring rubric is a hypothesis.</b> Thresholds are anchored to Charity Navigator's published methodology where one exists and documented in <code>docs/scoring-rubric.md</code>, but they are our judgment, not a standard, and are labelled that way in the app.</li>
   <li><b>The injection filter is pattern based.</b> New phrasings can get through; the hidden-text removal and the "untrusted content" wrapper are the backstop, not a guarantee. The verifier checks numbers, not words, so a false claim with no number in it (for example "accredited by X") is labelled self-reported but not disproved.</li>
-  <li><b>Not hosted.</b> It runs locally; a public version would need accounts, rate limiting per user rather than per IP, and a paid search API.</li>
+  <li><b>Not hosted.</b> A public version needs accounts, per-user rate limits and a paid search API.</li>
 </ul>
 <h3>With another month</h3>
 <ol>
@@ -419,10 +419,10 @@ test_tools.py::test_unreadable_website_leaves_impact_unscored_not_zero       PAS
   <li><b>Pilot with a giving circle</b> during the December season: one shared memo per meeting, and measure whether members change their allocation or send the questions.</li>
   <li><b>Charity response loop.</b> Send the drafted questions, record the charity's answers as new evidence, and re-score.</li>
   <li><b>A nonprofit self-check mode</b> for executive directors to see how a careful donor reads their filings before a funding ask.</li>
-  <li><b>Evaluate the judgments, not only the numbers:</b> compare the app's impact levels with GiveWell and Charity Navigator impact ratings on a sample of 50 charities.</li>
+  <li><b>Evaluate the judgments:</b> compare the app's impact levels with Charity Navigator's on 50 charities.</li>
 </ol>
 
-<p class="footer">This report was written with AI assistance (Claude Code), as the course allows; every number in it comes from the app's real runs, its test suite, or the sources listed in <code>docs/research.md</code>. The memo the app produces is decision support, not financial, legal, or tax advice. DEMO charities are fictional and labelled as such.</p>
+<p class="footer">Written with AI assistance (Claude Code), as the course allows; every number comes from the app's real runs, its tests, or the sources in <code>docs/research.md</code>. The app's memos are decision support, not financial, legal, or tax advice.</p>
 </main>
 <div id="lightbox" role="dialog" aria-label="Enlarged screenshot"><img alt=""></div>
 <script>
