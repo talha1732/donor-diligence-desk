@@ -52,7 +52,7 @@
       <div class="eyebrow">MGT 409 · Final project</div>
       <h1 style="font-size:2.1em">Donor Diligence Desk</h1>
       <div class="bar"></div>
-      <p>A two-minute, investment-committee style giving memo for any US charity, written by AI agents that are not allowed to invent a number.</p>
+      <p>A two-minute, investment-committee style giving memo for any US charity that files a Form 990, written by AI agents that are not allowed to invent a number.</p>
       <p class="small" style="margin-top:1.2em">Talha Javed · October 26, 2026<br><a href="https://github.com/talha1732/donor-diligence-desk">github.com/talha1732/donor-diligence-desk</a></p>
     </div>
     <div><img class="shot" src="{{img:walk-5-memo-top.webp}}" alt="A giving memo"></div>
@@ -69,7 +69,7 @@
     <div class="card"><div class="big">3 to 6 h</div><div class="l">to read three years of IRS Form 990s for three charities by hand (our estimate)</div></div>
   </div>
   <p class="small" style="margin-top:1em">Who: individual donors, giving circles (about 4,000 in the US), small family foundations. None has a program officer. Ratings cover about 15% of charities, and the local ones donors care about are often unrated.</p>
-  <p class="tiny">Giving USA 2026; Blackbaud Institute 2026; Money for Good (Hope Consulting); Charity Navigator; sources in docs/research.md</p>
+  <p class="tiny">Giving USA 2026; Blackbaud Institute 2026; Money for Good (Hope Consulting, 2010); Charity Navigator; sources in docs/research.md</p>
 </section>
 
 <!-- 3. What is new -->
@@ -78,7 +78,7 @@
   <h2>Not another star rating: a memo you can check, weighted to you</h2>
   <table>
     <tr><th></th><th>Charity Navigator</th><th>GiveWell</th><th>ChatGPT / Perplexity</th><th>Donor Diligence Desk</th></tr>
-    <tr><td>Any charity you name, incl. local</td><td>245K rated</td><td class="no">4 charities</td><td class="yes">yes</td><td class="yes">yes (Form 990 filers)</td></tr>
+    <tr><td>Any charity with 990 data, incl. local</td><td>245K rated</td><td class="no">4 charities</td><td class="yes">yes</td><td class="yes">yes (Form 990 filers)</td></tr>
     <tr><td>Weighted to your priorities</td><td class="no">no</td><td class="no">no</td><td>loosely</td><td class="yes">yes, re-weight instantly</td></tr>
     <tr><td>Every number linked to its source</td><td class="no">no</td><td>in reports</td><td class="no">often mis-cited</td><td class="yes">yes, and verified</td></tr>
     <tr><td>Questions to ask the charity</td><td class="no">no</td><td class="no">no</td><td>if asked</td><td class="yes">yes, drafted as an email</td></tr>
@@ -102,7 +102,7 @@
   <div class="grid2" style="grid-template-columns: 0.75fr 1.25fr; align-items:center">
     <ul class="small">
       <li>Real run: Connecticut Foodshare, Columbus House, IRIS for a New Haven donor</li>
-      <li>Six specialists in parallel read 990 data and websites: 29 tool calls</li>
+      <li>Six specialists in parallel read 990 data and websites: 24 tool calls (29 with the auditor's checks)</li>
       <li>Verifier checked 18 numeric findings: all matched</li>
       <li>Red-Team Auditor removed 3 claims the evidence did not support</li>
       <li>115 seconds, 18 model requests, <b>$0.0085</b></li>
@@ -128,18 +128,18 @@
 <!-- 7. Cost -->
 <section>
   <div class="eyebrow">Cost to run</div>
-  <h2>Less than a cent per memo, measured</h2>
+  <h2>About a cent or less per memo, measured</h2>
   <div class="grid4">
-    <div class="card accent"><div class="big">$0.006</div><div class="l">typical 2-charity memo: 60K input tokens (70% cached), 7K output, 45 to 62 seconds</div></div>
+    <div class="card accent"><div class="big">$0.006</div><div class="l">typical 2-charity memo: 56K input tokens (72% cached), 7K output, 45 to 62 seconds</div></div>
     <div class="card"><div class="big">$0.03</div><div class="l">per donor per month (5 memos)</div></div>
     <div class="card"><div class="big">$3</div><div class="l">per month for 100 donors</div></div>
-    <div class="card"><div class="big">$315</div><div class="l">per month for 10,000 donors (model only)</div></div>
+    <div class="card"><div class="big">$300</div><div class="l">per month for 10,000 donors (model only)</div></div>
   </div>
   <ul class="small" style="margin-top:1em">
-    <li>Code computes all 17 ratios, so prompts carry short facts, not raw filings</li>
+    <li>Code computes every metric, so prompts carry short facts, not raw filings</li>
     <li>Stable prompts first: 68% of input tokens served from cache, about a third off the bill</li>
     <li>Caps: 2 searches and 3 pages per charity; $0.10 kill switch per run, $2 per day</li>
-    <li>Tested a lean browsing mode: 6% cheaper, but it misses facts on subpages, so it was not shipped</li>
+    <li>Tested a lean browsing mode: 6% cheaper, but it cut off a fact near the bottom of a page and cannot reach subpages, so it was not shipped</li>
   </ul>
 </section>
 
@@ -150,14 +150,15 @@
   <div class="grid2" style="grid-template-columns: 1.25fr 0.75fr">
     <div>
       <div class="grid2" style="gap:14px">
-        <div class="card accent"><div class="big">0 / 43</div><div class="l">injected instructions reaching the model, defenses on / off (9 attack pages)</div></div>
-        <div class="card accent"><div class="big">0 / 18</div><div class="l">live runs with a planted claim in the memo, defenses on (9 of 9 with defenses off)</div></div>
+        <div class="card accent"><div class="big">0 / 44</div><div class="l">instruction-pattern matches reaching the model, defenses on / off (9 attack pages)</div></div>
+        <div class="card accent"><div class="big">0 of 9</div><div class="l">live runs with a planted claim in the memo, defenses on (9 of 9 with defenses off)</div></div>
       </div>
       <ul class="small" style="margin-top:.8em">
         <li>Hidden text removed (white-on-white, display:none, comments, off-screen)</li>
-        <li>Verifier deletes any finding whose numbers do not match the IRS ledger</li>
+        <li>Verifier deletes any finding whose numbers do not match the evidence ledger</li>
         <li>$0.10 per run and $2 per day kill switches; tool and request caps</li>
-        <li>Unreadable sites and missing data are "not scored", never 0</li>
+        <li>Cross-tested against a second build's 19 attacks: all blocked</li>
+        <li>Sites that cannot be read at all, and missing data, are left out of the score, never counted as 0</li>
       </ul>
     </div>
     <div><img class="shot" src="{{img:safety-panel.webp}}" alt="Safety panel" style="max-height:520px"></div>
@@ -167,7 +168,18 @@
 <!-- 9. Impact -->
 <section>
   <div class="eyebrow">Impact</div>
-  {{TODO:slide-impact}}
+  <!-- USER-TEST-SLIDE: add the tester's quote and times here if a user test is done -->
+  <h2>An afternoon of reading becomes a two-minute memo</h2>
+  <div class="grid3">
+    <div class="card accent"><div class="big">3 to 6 h</div><div class="l">to review three charities' 990s by hand (our estimate) versus 40 to 115 seconds measured for the app</div></div>
+    <div class="card"><div class="big">4 h</div><div class="l">median time foundation grantmakers spend researching one grant (Money for Good II, 2011)</div></div>
+    <div class="card"><div class="big">1 in 3</div><div class="l">midlevel donors who compare charities; a quarter of the rest say no time or no know-how (Boston College, 2020)</div></div>
+  </div>
+  <div class="grid3" style="margin-top:18px">
+    <div class="card"><div class="big">$0.01</div><div class="l">model cost per decision, against $108 to $217 of donor time at $36.14 an hour</div></div>
+    <div class="card"><div class="big">30 / 30</div><div class="l">IRS figures within 5% of the charities' audited statements (27 within 2%)</div></div>
+    <div class="card"><div class="big">~85%</div><div class="l">of 501(c)(3)s have no Charity Navigator rating; the app works for any charity with 990 data on ProPublica</div></div>
+  </div>
 </section>
 
 <!-- 10. Next -->

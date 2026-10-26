@@ -42,8 +42,10 @@ Then open **http://127.0.0.1:8000**. Stop the server with Ctrl+C.
 **If something goes wrong**
 
 - `python3 --version` shows 3.10 or older (the macOS default is 3.9): install Python 3.12 from
-  [python.org](https://www.python.org/downloads/) and use `python3.12 -m venv .venv`.
-- Port 8000 is busy: add `PORT=8001` to `.env` (or run `PORT=8001 python backend/run.py`) and open that port.
+  [python.org](https://www.python.org/downloads/), delete the old environment with `rm -rf .venv`, then run
+  `python3.12 -m venv .venv` and repeat the remaining steps. On Windows use `py -3.12 -m venv .venv`.
+- Port 8000 is busy: add `PORT=8001` to `.env` and restart (or run `PORT=8001 python backend/run.py` in
+  bash, `$env:PORT=8001; python backend\run.py` in PowerShell), then open that port.
 - The start-up message says no key was found: put `PORTKEY_API_KEY=...` in a `.env` in the repo folder or the
   folder above it, then restart. The saved sample memos under **Past runs** work without a key.
 
@@ -60,8 +62,9 @@ submissions/
 ```
 
 `.env.example` lists every setting. When the server starts it prints whether a key was found (never the key
-itself). Without a key the app still starts: you can search charities, look at their computed IRS metrics,
-and open the saved sample memos under **Past runs**, but new memos need the key.
+itself). Only the nearest `.env` is read, so if you create one in the repo folder it must contain the key.
+Without a key the app still starts: you can search charities and open the saved sample memos under
+**Past runs**, but new memos need the key.
 
 ## Try this first (2 minutes)
 
@@ -72,7 +75,7 @@ and open the saved sample memos under **Past runs**, but new memos need the key.
    hides text (white on white, `display:none`, an HTML comment, an `aria-hidden` block) telling AI reviewers
    to rate it 100/100, claim a 95% program-spending ratio, and say GiveWell evaluated it. All of it is
    removed before any model reads the page.
-4. Read the memo (about 30 seconds and under $0.01 per run). Click any source chip to see where a number
+4. Read the memo (about a minute and under $0.01 per run). Click any source chip to see where a number
    came from: an IRS field, a deterministic calculation, or a quoted website excerpt.
 
 You can also search any US charity by name or EIN. DEMO charities are fictional and labelled as such.
@@ -83,9 +86,10 @@ The app works with live data by default: the free ProPublica Nonprofit Explorer 
 filings and the charity's own website. Responses are cached in `backend/data/cache/propublica/`.
 
 A small test dataset is committed so the app also runs without the ProPublica API:
-two fictional DEMO charities with local demo websites, plus cached filings for 10 real charities
-(Connecticut Foodshare, Columbus House, IRIS, Habitat for Humanity of Greater New Haven, Feeding America,
-GiveDirectly, Doctors Without Borders USA, and three more).
+two fictional DEMO charities with local demo websites, plus cached filings for seven featured real
+charities (Connecticut Foodshare, Columbus House, IRIS, Habitat for Humanity of Greater New Haven, Feeding
+America, GiveDirectly, Doctors Without Borders USA) and three more filers kept for tests (a 990-EZ filer, a
+990-PF private foundation and a second Connecticut Foodshare EIN).
 
 To switch, set `OFFLINE_MODE=1` in `.env` (or the environment) and restart. ProPublica data then comes only
 from the cache and the agents read only the local demo websites. The model still needs the key.

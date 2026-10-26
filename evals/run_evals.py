@@ -61,14 +61,20 @@ def data_accuracy() -> dict:
             skipped.append(f"{ein} {row['tax_year']} {field}")
             continue
         compared.append({"ein": ein, "year": row["tax_year"], "field": field, "truth": truth, "cached": cached,
-                         "rel_diff": (cached - truth) / abs(truth)})
-    within = lambda tol: sum(abs(c["rel_diff"]) <= tol for c in compared)  # noqa: E731
+                         "rel_diff": (cached - truth) / abs(truth),
+                         # Audited statements are an independent check; ProPublica's own page is the same IRS data.
+                         "audited": row["source"].lower().startswith("audited")})
+
+    def summary(items: list[dict]) -> dict:
+        within = lambda tol: sum(abs(c["rel_diff"]) <= tol for c in items)  # noqa: E731
+        return {"compared": len(items), "exact": within(1e-9), "within_2pct": within(0.02),
+                "within_5pct": within(0.05)}
+
     return {
         "rows": len(rows),
-        "compared": len(compared),
-        "exact": within(1e-9),
-        "within_2pct": within(0.02),
-        "within_5pct": within(0.05),
+        **summary(compared),
+        "audited": summary([c for c in compared if c["audited"]]),
+        "propublica_page": summary([c for c in compared if not c["audited"]]),
         "worst": sorted(compared, key=lambda c: -abs(c["rel_diff"]))[:3],
         "skipped": skipped,
     }
@@ -169,10 +175,14 @@ def main() -> int:
         return 0
 
     acc = data_accuracy()
-    print("1. Data accuracy: cached ProPublica values versus audited statements")
+    print("1. Data accuracy: cached ProPublica values versus independent sources")
     print(f"   compared {acc['compared']} of {acc['rows']} ground-truth rows "
           f"(others are not in the free extract or not cached)")
-    print(f"   exact: {acc['exact']}   within 2%: {acc['within_2pct']}   within 5%: {acc['within_5pct']}")
+    for label, key in (("audited financial statements (independent)", "audited"),
+                       ("ProPublica's published 990 page (same IRS data)", "propublica_page")):
+        a = acc[key]
+        print(f"   vs {label}: {a['compared']} values, exact {a['exact']}, within 2% {a['within_2pct']}, "
+              f"within 5% {a['within_5pct']}")
     for c in acc["worst"]:
         print(f"   largest gap: {c['ein']} {c['year']} {c['field']} {c['rel_diff']:+.2%}")
 
