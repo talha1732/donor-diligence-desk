@@ -3,8 +3,9 @@ import type { RunState, AgentView } from "../runState";
 import { elapsedSeconds } from "../runState";
 import { STAGES } from "../types";
 import { ROLE_DUTY, ROLE_TITLES, SECURITY_TITLES, SEVERITY_LABELS, STAGE_HELP, STAGE_LABELS, TOOL_LABELS } from "../labels";
-import { argsToText, cleanName, fmtCost, fmtInt, fmtSeconds, niceName, truncate } from "../format";
+import { cleanName, fmtCost, fmtInt, fmtSeconds, niceName, truncate } from "../format";
 import { DemoBadge, Notice, Spinner } from "./common";
+import { describeTool, plainSecurityDetail } from "../toolText";
 
 interface Props {
   run: RunState;
@@ -204,22 +205,22 @@ function AgentCard({ agent }: { agent: AgentView }) {
         <span className="activity-label">{agent.status === "done" ? "Result" : "Now"}</span>
         <span>{agent.status === "done" || agent.status === "error" ? agent.summary || agent.activity : agent.activity}</span>
       </div>
-      {agent.lastText && agent.status === "running" && <p className="agent-text">"{truncate(agent.lastText, 160)}"</p>}
       {recent.length > 0 && (
         <ul className="agent-tools">
-          {recent.map((t, i) => (
-            <li key={i}>
-              <code>
-                {t.tool}({truncate(argsToText(t.args), 48)})
-              </code>
-              {t.result_summary && <span className="muted">{truncate(t.result_summary, 90)}</span>}
-            </li>
-          ))}
+          {recent.map((t, i) => {
+            const d = describeTool(t);
+            return (
+              <li key={i} title={`Technical detail: ${d.raw}`}>
+                <span className="tool-text">{truncate(d.text, 90)}</span>
+                {d.result && <span className="muted">{truncate(d.result, 90)}</span>}
+              </li>
+            );
+          })}
           {agent.toolCalls.length > 3 && <li className="muted small">and {agent.toolCalls.length - 3} earlier</li>}
         </ul>
       )}
       <footer className="agent-foot">
-        <span>{agent.toolCalls.length || u?.tool_calls || 0} tool calls</span>
+        <span>{agent.toolCalls.length || u?.tool_calls || 0} tool uses</span>
         {u && (
           <>
             <span>{fmtInt(u.input_tokens + u.output_tokens)} tokens</span>
@@ -238,45 +239,45 @@ function ToolLog({ run }: { run: RunState }) {
   return (
     <section className="card tool-log">
       <header className="card-head">
-        <h3>Tool calls</h3>
-        <span className="muted small">{run.toolLog.length} so far, newest first. Tools return numbers; the model only reads them.</span>
+        <h3>What the agents did</h3>
+        <span className="muted small">{run.toolLog.length} tool uses, newest first. The tools return the numbers; the AI only reads them.</span>
       </header>
       {rows.length === 0 ? (
-        <p className="muted empty">Tool calls appear here as the agents work.</p>
+        <p className="muted empty">Each tool the agents use appears here as they work.</p>
       ) : (
         <div className="table-wrap">
           <table className="table toollog-table">
             <colgroup>
               <col style={{ width: 72 }} />
-              <col style={{ width: 290 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 300 }} />
+              <col style={{ width: 250 }} />
+              <col style={{ width: 330 }} />
               <col />
-              <col style={{ width: 72 }} />
+              <col style={{ width: 230 }} />
             </colgroup>
             <thead>
               <tr>
                 <th>Time</th>
                 <th>Agent</th>
-                <th>Tool</th>
-                <th>Arguments</th>
+                <th>What it did</th>
                 <th>Result</th>
-                <th className="num">ms</th>
+                <th>Technical detail</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((t, i) => (
-                <tr key={i}>
-                  <td className="mono nowrap">+{((Date.parse(t.ts) - start) / 1000).toFixed(1)}s</td>
-                  <td>{agentTitle(run, t.agent)}</td>
-                  <td title={t.tool}>
-                    {TOOL_LABELS[t.tool] ?? t.tool}
-                  </td>
-                  <td className="mono args" title={argsToText(t.args)}>{truncate(argsToText(t.args), 90)}</td>
-                  <td>{t.result_summary}</td>
-                  <td className="num mono">{t.ms != null ? fmtInt(t.ms) : ""}</td>
-                </tr>
-              ))}
+              {rows.map((t, i) => {
+                const d = describeTool(t);
+                return (
+                  <tr key={i}>
+                    <td className="mono nowrap">+{((Date.parse(t.ts) - start) / 1000).toFixed(1)}s</td>
+                    <td>{agentTitle(run, t.agent)}</td>
+                    <td title={TOOL_LABELS[t.tool] ?? t.tool}>{d.text}</td>
+                    <td>{d.result}</td>
+                    <td className="mono args muted" title={`${d.raw}${t.result_summary ? ` -> ${t.result_summary}` : ""}${t.ms != null ? ` (${fmtInt(t.ms)} ms)` : ""}`}>
+                      {truncate(d.raw, 60)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -331,6 +332,14 @@ function SpendMeter({ run }: { run: RunState }) {
   );
 }
 
+const SNIPPET_LABELS: Record<string, string> = {
+  hidden_text_removed: "Example of the hidden text",
+  injection_detected: "Instruction that was blocked",
+  unverified_claim: "Removed claim",
+  url_blocked: "Blocked address",
+  input_blocked: "Note that was dropped",
+};
+
 export function SecurityPanel({ run, compact }: { run: RunState; compact?: boolean }) {
   return (
     <section className="card security">
@@ -354,10 +363,10 @@ export function SecurityPanel({ run, compact }: { run: RunState; compact?: boole
               <div className="muted small">
                 {e.agent ? agentTitle(run, e.agent) : e.ein ? charityName(run, e.ein) : "Run"}
               </div>
-              <p className="sec-detail">{compact ? truncate(e.detail, 160) : e.detail}</p>
+              <p className="sec-detail">{compact ? truncate(plainSecurityDetail(e.detail), 160) : plainSecurityDetail(e.detail)}</p>
               {e.snippet && (
                 <blockquote className="snippet">
-                  <span className="snippet-label">{e.kind === "unverified_claim" ? "Removed claim" : "Text that was blocked"}</span>
+                  <span className="snippet-label">{SNIPPET_LABELS[e.kind] ?? "Text that was blocked"}</span>
                   {truncate(e.snippet, 240)}
                 </blockquote>
               )}

@@ -1241,6 +1241,11 @@ input[type="range"]::-moz-range-thumb {
   padding-left: 8px;
 }
 
+.agent-tools .tool-text {
+  color: var(--navy);
+  font-weight: 500;
+}
+
 .agent-tools code {
   background: none;
   padding: 0;

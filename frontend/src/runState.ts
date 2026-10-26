@@ -104,6 +104,21 @@ function newAgent(key: string, ein: string | null, label: string | null): AgentV
   };
 }
 
+const TOOL_VERBS: Record<string, string> = {
+  get_field_history: "looking up filing history",
+  get_metric: "checking computed metrics",
+  compare_years: "comparing years",
+  search_web: "searching the web",
+  read_page: "reading web pages",
+  get_evidence: "re-checking sources",
+};
+
+function toolActivity(tools: string[]): string {
+  const verbs = Array.from(new Set(tools.map((t) => TOOL_VERBS[t] ?? t.replace(/_/g, " "))));
+  const text = verbs.length > 1 ? `${verbs.slice(0, -1).join(", ")} and ${verbs[verbs.length - 1]}` : verbs[0];
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 function toolName(t: StepToolCall): string {
   if (typeof t === "string") return t;
   return t.tool ?? t.tool_name ?? t.name ?? "tool";
@@ -223,10 +238,10 @@ export function reduceEvent(s: RunState, e: RunEvent): RunState {
       const d = e.data;
       const cur = ensureAgent(base, d.agent, d.ein).agents[d.agent];
       let activity = cur.activity;
-      if (d.kind === "model_request") activity = `Thinking (model request ${d.step})`;
+      if (d.kind === "model_request") activity = d.step && d.step > 1 ? `Thinking about what it found (step ${d.step})` : "Reading the task";
       else if (d.kind === "model_response") {
         const tools = (d.tool_calls ?? []).map(toolName);
-        activity = tools.length ? `Calling ${tools.join(", ")}` : "Writing its findings";
+        activity = tools.length ? toolActivity(tools) : "Writing its findings";
       } else if (d.kind === "end") activity = "Finished";
       return patchAgent(
         base,
