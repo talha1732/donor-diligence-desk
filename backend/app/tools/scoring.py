@@ -241,6 +241,17 @@ def _impact_evidence(impact: ImpactAssessment | None, weight: float) -> Dimensio
             explanation="No impact assessment is available, so this dimension is not scored.",
             missing_inputs=["impact_assessment"],
         )
+    if not impact.pages_read and not impact.evidence_ids:
+        # A blocked or unreachable website says nothing about the charity's results, so it is not scored as 0.
+        return DimensionScore(
+            dimension="impact_evidence",
+            label=DIMENSION_LABELS["impact_evidence"],
+            score=None,
+            weight=weight,
+            explanation="The charity's website could not be read in this run, so impact evidence is not scored. "
+            "Ask the charity for its outcome reports.",
+            missing_inputs=["website_content"],
+        )
     level = max(0, min(4, int(impact.evidence_level)))
     label = impact.evidence_level_label or IMPACT_EVIDENCE_LEVELS[level]
     return DimensionScore(

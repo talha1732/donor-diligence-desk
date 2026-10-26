@@ -45,6 +45,9 @@ After a live run finishes the address bar changes to `?run=<run_id>&tab=...`, so
 2. **Set priorities**: five weights 0 to 5, donor note (500 characters), spending cap (default from `/api/health`, max $0.50).
 3. **Watch the run / Run log**: `POST /api/diligence/stream` read with `fetch` and a stream reader (SSE over POST). Stage stepper, one card per agent, tool-call log, spend meter, safety panel.
 4. **Read the memo**: headline, summary, recommendation, at-a-glance table, per-charity spider chart, dimension explanations, strengths and concerns with source chips, questions, could-not-verify list, auditor notes, token and cost table. Prints cleanly (browser print or "Print or save as PDF").
+   - **Try different priorities**: five weight sliders under the at-a-glance table re-rank the charities instantly in the browser (`src/reweight.ts` mirrors `backend/app/tools/scoring.py`: weighted mean, all-zero weights count equally, `band_for` thresholds and the insufficient-data rule). No AI calls. Print shows the original priorities only.
+   - **Revenue and expenses chart** per charity (`src/components/TrendChart.tsx`): up to the 5 most recent tax years from the `PP-<ein>-<year>-total_revenue` / `total_expenses` ledger entries, deficit years marked, each point opens its evidence entry. Hidden when fewer than 2 years exist.
+   - **Draft an email to the charity** (`src/components/EmailDraft.tsx`): a fixed, editable template with the questions, "Copy email" and a `mailto:` link. Hidden in print.
 
 The evidence ledger tab lists every evidence entry with filters. Source chips anywhere open a side drawer with the entry, its formula or quote, its inputs (as further chips), and its source link.
 

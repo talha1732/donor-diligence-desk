@@ -1,9 +1,13 @@
-import type { AgentUsage, CharityScorecard, CharitySection, DiligenceResult, Finding } from "../types";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { AgentUsage, CharityScorecard, CharitySection, DiligenceResult, Finding, Weights } from "../types";
 import { DIMENSIONS, DIMENSION_LABELS, IMPACT_EVIDENCE_LEVELS } from "../types";
-import { ROLE_TITLES, agentRole } from "../labels";
+import { BAND_LABELS, DIMENSION_HELP, IMPORTANCE, ROLE_TITLES, agentRole } from "../labels";
 import { cleanName, fmtCost, fmtDateTime, fmtEin, fmtInt, fmtSeconds, niceName } from "../format";
+import { inferHasFilings, rescore, sameWeights, type Rescored } from "../reweight";
 import { BandBadge, DemoBadge, Notice, OrgName, SourceChips } from "./common";
 import { SpiderChart } from "./SpiderChart";
+import { TrendChart } from "./TrendChart";
+import { EmailDraft } from "./EmailDraft";
 
 interface Props {
   result: DiligenceResult;
@@ -31,6 +35,26 @@ export function MemoView({ result, onShowRunLog }: Props) {
       could_not_verify: [],
     }));
   const cards = new Map(result.scorecards.map((s) => [s.ein, s]));
+  const original = result.request.weights;
+  const [weights, setWeights] = useState<Weights>(original);
+  useEffect(() => setWeights(result.request.weights), [result.run_id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changed = !sameWeights(weights, original);
+  const scores = useMemo(() => {
+    const out = new Map<string, { now: Rescored; orig: Rescored }>();
+    for (const s of sections) {
+      const card = cards.get(s.ein);
+      const orig: Rescored = { overall: card?.overall ?? s.overall ?? null, band: card?.band ?? s.band };
+      let now = orig;
+      if (changed && card) {
+        const years = result.metrics.find((m) => m.ein === s.ein)?.years_of_data;
+        now = rescore(card, weights, inferHasFilings(card, years));
+      }
+      out.set(s.ein, { now, orig });
+    }
+    return out;
+    // sections and cards derive from result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, weights, changed]);
   const nameFor = (agent: string) => {
     const ein = agent.split(":")[1];
     const org = result.orgs.find((o) => o.ein === ein);
@@ -87,7 +111,19 @@ export function MemoView({ result, onShowRunLog }: Props) {
 
         <section className="memo-block">
           <h2>At a glance</h2>
-          <GlanceTable sections={sections} cards={cards} result={result} />
+          {changed ? (
+            <>
+              <div className="no-print">
+                <GlanceTable sections={sections} cards={cards} scores={scores} weights={weights} original={original} useNow />
+              </div>
+              <div className="print-only">
+                <GlanceTable sections={sections} cards={cards} scores={scores} weights={original} original={original} />
+              </div>
+            </>
+          ) : (
+            <GlanceTable sections={sections} cards={cards} scores={scores} weights={original} original={original} />
+          )}
+          <PrioritiesPanel weights={weights} original={original} onChange={setWeights} />
           <p className="method-note">
             <strong>How scores work.</strong> Each dimension is scored 0 to 100 with a documented rubric applied to IRS Form
             990 data and the charity's own website. The thresholds are a hypothesis, not facts. The overall score is the
@@ -97,7 +133,7 @@ export function MemoView({ result, onShowRunLog }: Props) {
         </section>
 
         {sections.map((s) => (
-          <CharityBlock key={s.ein} section={s} card={cards.get(s.ein)} result={result} />
+          <CharityBlock key={s.ein} section={s} card={cards.get(s.ein)} result={result} score={scores.get(s.ein)!} weights={weights} changed={changed} />
         ))}
 
         {result.audit && result.audit.auditor_notes.length > 0 && (
@@ -132,38 +168,98 @@ export function MemoView({ result, onShowRunLog }: Props) {
   );
 }
 
-function GlanceTable({ sections, cards, result }: { sections: CharitySection[]; cards: Map<string, CharityScorecard>; result: DiligenceResult }) {
-  const w = result.request.weights;
+type ScoreMap = Map<string, { now: Rescored; orig: Rescored }>;
+
+/** Highest overall first; charities without an overall go last; ties keep memo order. */
+function rankOrder(sections: CharitySection[], pick: (ein: string) => number | null): string[] {
+  return sections
+    .map((s, i) => ({ ein: s.ein, i, v: pick(s.ein) }))
+    .sort((a, b) => (a.v === null ? (b.v === null ? a.i - b.i : 1) : b.v === null ? -1 : b.v - a.v || a.i - b.i))
+    .map((x) => x.ein);
+}
+
+function GlanceTable({
+  sections,
+  cards,
+  scores,
+  weights,
+  original,
+  useNow,
+}: {
+  sections: CharitySection[];
+  cards: Map<string, CharityScorecard>;
+  scores: ScoreMap;
+  weights: Weights;
+  original: Weights;
+  useNow?: boolean;
+}) {
+  const pick = (ein: string) => (useNow ? scores.get(ein)!.now : scores.get(ein)!.orig);
+  const order = rankOrder(sections, (ein) => pick(ein).overall);
+  const origOrder = rankOrder(sections, (ein) => scores.get(ein)!.orig.overall);
+  const byEin = new Map(sections.map((s) => [s.ein, s]));
+  const ranked = sections.length > 1;
   return (
     <div className="table-wrap">
       <table className="table glance">
         <thead>
           <tr>
+            {ranked && <th className="rank-col">Rank</th>}
             <th>Charity</th>
             <th>Fit</th>
             <th className="num">Overall</th>
-            {DIMENSIONS.map((d) => (
-              <th key={d} className="num">
-                {DIMENSION_LABELS[d]}
-                <span className="th-sub">weight {w[d]}</span>
-              </th>
-            ))}
+            {DIMENSIONS.map((d) => {
+              const moved = useNow && weights[d] !== original[d];
+              return (
+                <th key={d} className="num">
+                  {DIMENSION_LABELS[d]}
+                  <span className={`th-sub${moved ? " th-changed" : ""}`} title={moved ? `Originally ${original[d]}` : undefined}>
+                    weight {weights[d]}
+                  </span>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {sections.map((s) => {
-            const card = cards.get(s.ein);
+          {order.map((ein, idx) => {
+            const s = byEin.get(ein)!;
+            const card = cards.get(ein);
+            const sc = pick(ein);
+            const orig = scores.get(ein)!.orig;
+            const was = origOrder.indexOf(ein);
+            const rankMove = useNow ? was - idx : 0;
+            const delta = useNow && sc.overall !== null && orig.overall !== null ? Math.round(sc.overall) - Math.round(orig.overall) : 0;
             return (
-              <tr key={s.ein}>
+              <tr key={ein} className={useNow && (rankMove || delta) ? "row-moved" : undefined}>
+                {ranked && (
+                  <td className="rank-col">
+                    <span className="rank-num">{idx + 1}</span>
+                    {rankMove !== 0 && (
+                      <span className={`move ${rankMove > 0 ? "move-up" : "move-down"}`} title={`Ranked ${ordinal(was + 1)} with your original priorities`}>
+                        {rankMove > 0 ? "▲" : "▼"} {Math.abs(rankMove)}
+                      </span>
+                    )}
+                  </td>
+                )}
                 <td>
-                  <a href={`#charity-${s.ein}`} className="glance-name">
+                  <a href={`#charity-${ein}`} className="glance-name">
                     <OrgName name={s.name} isDemo={s.is_demo} />
                   </a>
                 </td>
                 <td>
-                  <BandBadge band={card?.band ?? s.band} />
+                  <BandBadge band={sc.band} />
                 </td>
-                <td className="num strong">{fmtScore(card?.overall ?? s.overall)}</td>
+                <td className="num strong overall-cell" title={sc.overall === null ? undefined : `${sc.overall.toFixed(1)} of 100`}>
+                  {fmtScore(sc.overall)}
+                  {useNow && (
+                    <span
+                      className={`delta ${delta > 0 ? "delta-up" : delta < 0 ? "delta-down" : "delta-same"}`}
+                      title={`${orig.overall === null ? "n/a" : orig.overall.toFixed(1)} with your original priorities`}
+                    >
+                      {delta > 0 ? `▲ ${delta}` : delta < 0 ? `▼ ${-delta}` : "no change"}
+                    </span>
+                  )}
+                </td>
                 {DIMENSIONS.map((d) => {
                   const ds = card?.dimensions.find((x) => x.dimension === d);
                   return (
@@ -181,16 +277,114 @@ function GlanceTable({ sections, cards, result }: { sections: CharitySection[]; 
   );
 }
 
+function ordinal(n: number) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function PrioritiesPanel({ weights, original, onChange }: { weights: Weights; original: Weights; onChange: (w: Weights) => void }) {
+  const changed = !sameWeights(weights, original);
+  const total = DIMENSIONS.reduce((sum, d) => sum + weights[d], 0);
+  return (
+    <section className="reweight no-print" aria-labelledby="reweight-title">
+      <header className="reweight-head">
+        <div>
+          <h3 id="reweight-title">Try different priorities</h3>
+          <p className="muted small reweight-note">
+            Scores update instantly in your browser. No AI calls: the five dimension scores are fixed calculations, only
+            the weights change. The written memo reflects your original priorities.
+          </p>
+        </div>
+        {changed ? (
+          <button className="btn-link reweight-reset" type="button" onClick={() => onChange(original)}>
+            Reset to your original priorities
+          </button>
+        ) : (
+          <span className="reweight-status small">Showing your original priorities</span>
+        )}
+      </header>
+      <div className="reweight-grid">
+        {DIMENSIONS.map((d) => {
+          const v = weights[d];
+          const share = total > 0 ? v / total : 1 / DIMENSIONS.length;
+          const moved = v !== original[d];
+          return (
+            <div className={`rw-cell${moved ? " is-moved" : ""}`} key={d}>
+              <div className="rw-top">
+                <label htmlFor={`rw-${d}`} className="rw-label" title={DIMENSION_HELP[d]}>
+                  {DIMENSION_LABELS[d]}
+                </label>
+                <span className="rw-value">{v}</span>
+              </div>
+              <input
+                id={`rw-${d}`}
+                type="range"
+                min={0}
+                max={5}
+                step={1}
+                value={v}
+                onChange={(e) => onChange({ ...weights, [d]: Number(e.target.value) })}
+                style={{ ["--fill" as string]: `${(v / 5) * 100}%` }}
+                aria-valuetext={`${v}, ${IMPORTANCE[Math.round(v)] ?? ""}`}
+              />
+              <div className="rw-foot small">
+                <span>{IMPORTANCE[Math.round(v)] ?? ""}</span>
+                <span className="muted">{moved ? `was ${original[d]}` : `${Math.round(share * 100)}% of overall`}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {total === 0 && <p className="muted small reweight-zero">All weights are zero, so the five dimensions count equally, as in the scoring rules.</p>}
+    </section>
+  );
+}
+
+/** Shows the re-weighted value on screen and the original value in print. */
+function ScreenPrint({ changed, screen, print }: { changed: boolean; screen: ReactNode; print: ReactNode }) {
+  if (!changed) return <>{print}</>;
+  return (
+    <>
+      <span className="no-print">{screen}</span>
+      <span className="print-only">{print}</span>
+    </>
+  );
+}
+
 function fmtScore(v: number | null | undefined) {
   return v == null ? "n/a" : String(Math.round(v));
 }
 
-function CharityBlock({ section, card, result }: { section: CharitySection; card?: CharityScorecard; result: DiligenceResult }) {
+function CharityBlock({
+  section,
+  card,
+  result,
+  score,
+  weights,
+  changed,
+}: {
+  section: CharitySection;
+  card?: CharityScorecard;
+  result: DiligenceResult;
+  score: { now: Rescored; orig: Rescored };
+  weights: Weights;
+  changed: boolean;
+}) {
   const org = result.orgs.find((o) => o.ein === section.ein);
   const impact = result.reports.find((r) => r.ein === section.ein && r.role === "impact")?.impact;
   const name = displayName(section.name, section.is_demo);
-  const band = card?.band ?? section.band;
-  const overall = card?.overall ?? section.overall;
+  const { now, orig } = score;
+  const scoreHead = (sc: Rescored, note?: ReactNode) => (
+    <div className="charity-score">
+      <BandBadge band={sc.band} large />
+      <div className="overall">
+        <span className="overall-num">{fmtScore(sc.overall)}</span>
+        <span className="overall-of">/ 100 overall</span>
+        {note}
+      </div>
+    </div>
+  );
   return (
     <section className="memo-block charity-block" id={`charity-${section.ein}`}>
       <header className="charity-head">
@@ -203,22 +397,34 @@ function CharityBlock({ section, card, result }: { section: CharitySection; card
             {org?.city || org?.state ? " · " : ""}EIN {fmtEin(section.ein)}
           </div>
         </div>
-        <div className="charity-score">
-          <BandBadge band={band} large />
-          <div className="overall">
-            <span className="overall-num">{fmtScore(overall)}</span>
-            <span className="overall-of">/ 100 overall</span>
-          </div>
-        </div>
+        {changed ? (
+          <>
+            <div className="no-print">
+              {scoreHead(
+                now,
+                <span className="overall-was" title="The memo text below uses your original priorities">
+                  was {fmtScore(orig.overall)}
+                  {now.band !== orig.band ? `, ${BAND_LABELS[orig.band]}` : ""}
+                </span>,
+              )}
+            </div>
+            <div className="print-only">{scoreHead(orig)}</div>
+          </>
+        ) : (
+          scoreHead(orig)
+        )}
       </header>
       {section.one_line && <p className="one-line">{section.one_line}</p>}
 
       {card && (
         <div className="score-grid">
-          <figure className="spider-wrap">
-            <SpiderChart dimensions={card.dimensions} title={`Scores for ${name}`} />
-            <figcaption className="muted small">Shared 0 to 100 scale for every charity. Gaps mean no data, not zero.</figcaption>
-          </figure>
+          <div className="score-side">
+            <figure className="spider-wrap">
+              <SpiderChart dimensions={card.dimensions} title={`Scores for ${name}`} />
+              <figcaption className="muted small">Shared 0 to 100 scale for every charity. Gaps mean no data, not zero.</figcaption>
+            </figure>
+            <TrendChart ein={section.ein} name={name} />
+          </div>
           <div className="dims">
             {DIMENSIONS.map((d) => {
               const ds = card.dimensions.find((x) => x.dimension === d);
@@ -227,7 +433,13 @@ function CharityBlock({ section, card, result }: { section: CharitySection; card
                 <div className="dim" key={d}>
                   <div className="dim-top">
                     <span className="dim-label">{DIMENSION_LABELS[d]}</span>
-                    <span className="dim-weight muted small">weight {ds?.weight ?? result.request.weights[d]}</span>
+                    <span className="dim-weight muted small">
+                      <ScreenPrint
+                        changed={changed && weights[d] !== result.request.weights[d]}
+                        screen={<span className="weight-changed">weight {weights[d]}</span>}
+                        print={<>weight {ds?.weight ?? result.request.weights[d]}</>}
+                      />
+                    </span>
                     <span className={`dim-score${score == null ? " nodata" : ""}`}>{score == null ? "no data" : Math.round(score)}</span>
                   </div>
                   <div className="dim-bar">
@@ -261,7 +473,9 @@ function CharityBlock({ section, card, result }: { section: CharitySection; card
                 <li key={i}>{q}</li>
               ))}
             </ol>
-          ) : (
+          ) : null}
+          {section.questions_for_charity.length > 0 && <EmailDraft name={name} questions={section.questions_for_charity} />}
+          {section.questions_for_charity.length === 0 && (
             <p className="muted">None.</p>
           )}
         </div>

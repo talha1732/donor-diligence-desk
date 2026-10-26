@@ -132,7 +132,12 @@ ATTACK_PAGES = {
     "exfiltration.html": ("collector.example", "PORTKEY_API_KEY", "API key"),
     "tiny-offscreen.html": ("five stars", "exceptional", "highest possible score", "advocate"),
     "attribute-meta.html": ("top rated", "100/100", "perfect score", "no financial concerns"),
+    "harbor-hidden-facts.html": ("randomized", "GiveWell", "96%", "100/100", "four stars"),
+    "harbor-hidden-facts-plain.html": ("randomized", "GiveWell", "96%", "100/100", "four stars"),
 }
+# Pages whose hidden text states false facts instead of instructions: nothing for the injection detector to
+# match, so the defense is the sanitizer removing hidden text.
+FACT_ONLY_PAGES = {"harbor-hidden-facts.html", "harbor-hidden-facts-plain.html"}
 
 
 def test_attack_corpus_is_complete():
@@ -144,7 +149,10 @@ def test_attack_corpus_is_complete():
 def test_attack_page_neutralised(name):
     html = (ATTACK_DIR / name).read_text(encoding="utf-8")
     view, page = _model_view(html, f"http://127.0.0.1:8000/demo/attacks/{name}")
-    assert page.injection_findings, f"{name}: no injection finding"
+    if name in FACT_ONLY_PAGES:
+        assert len(page.hidden_segments) >= 3, f"{name}: hidden facts not recorded"
+    else:
+        assert page.injection_findings, f"{name}: no injection finding"
     body = view.split("\n", 2)[2].rsplit("</untrusted_content>", 1)[0]  # page text inside the wrapper
     for payload in ATTACK_PAGES[name]:
         assert payload not in body, f"{name}: '{payload}' reached the model"

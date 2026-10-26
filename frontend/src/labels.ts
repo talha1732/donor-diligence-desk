@@ -14,6 +14,9 @@ export const BAND_HELP: Record<Band, string> = {
   insufficient_data: "Two or more dimensions could not be scored",
 };
 
+/** Words for the 0 to 5 priority weights. */
+export const IMPORTANCE = ["Ignore", "Low", "Some", "Important", "High", "Top priority"];
+
 export const STAGE_LABELS: Record<StageName, string> = {
   intake: "Intake",
   research: "Research",

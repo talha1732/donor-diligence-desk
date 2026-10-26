@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donor Diligence Desk (Talha Javed, MGT 409)</title>
+<style>{{reveal_css}}</style>
+<style>{{reveal_theme_css}}</style>
+<style>
+  :root {
+    --navy: #14213d; --ink-2: #3a4560; --muted: #667085; --line: #e4e7ec; --soft: #f7f8fa;
+    --accent: #0f766e; --accent-soft: #e7f4f2; --warn: #8f5b00; --warn-bg: #fdf3df; --bad: #b42318; --bad-bg: #fdeceb;
+    --r-background-color: #ffffff; --r-main-color: #14213d; --r-heading-color: #14213d;
+    --r-main-font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, Arial, sans-serif;
+    --r-heading-font: Georgia, "Times New Roman", serif; --r-link-color: #0f766e; --r-main-font-size: 30px;
+  }
+  .reveal h1, .reveal h2, .reveal h3 { text-transform: none; font-weight: 700; letter-spacing: 0; }
+  .reveal h1 { font-size: 2.3em; } .reveal h2 { font-size: 1.45em; margin-bottom: .45em; } .reveal h3 { font-size: 1.0em; }
+  .reveal .slides section { text-align: left; }
+  .reveal .eyebrow { font-family: var(--r-main-font); font-size: .5em; font-weight: 700; letter-spacing: .12em; color: var(--accent); text-transform: uppercase; margin-bottom: .3em; }
+  .reveal p, .reveal li { line-height: 1.35; }
+  .reveal ul { margin-left: 1em; } .reveal li { margin-bottom: .35em; }
+  .reveal .small { font-size: .62em; color: var(--ink-2); }
+  .reveal .tiny { font-size: .45em; color: var(--muted); }
+  .reveal .big { font-family: Georgia, serif; font-size: 1.9em; font-weight: 700; color: var(--accent); line-height: 1; }
+  .reveal .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .reveal .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .reveal .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .reveal .card { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: #fff; }
+  .reveal .card .l { font-size: .55em; color: var(--ink-2); margin-top: .35em; line-height: 1.3; }
+  .reveal .card.accent { background: var(--accent-soft); border-color: #9fd1ca; }
+  .reveal .card.warn { background: var(--warn-bg); border-color: #e8c766; }
+  .reveal img.shot { border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 30px rgba(20,33,61,.12); margin: 0; max-height: 560px; }
+  .reveal .cap { font-size: .45em; color: var(--muted); margin-top: .4em; }
+  .reveal table { font-size: .52em; border-collapse: collapse; width: 100%; }
+  .reveal table th, .reveal table td { border-bottom: 1px solid var(--line); padding: .35em .5em; text-align: left; }
+  .reveal table th { color: var(--ink-2); background: var(--soft); }
+  .reveal td.n, .reveal th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .reveal .bar { height: 6px; background: var(--navy); width: 120px; margin: 18px 0 22px; }
+  .reveal .footer-note { position: absolute; bottom: -40px; left: 0; font-size: .38em; color: var(--muted); }
+  .reveal .yes { color: #17734a; font-weight: 700; } .reveal .no { color: var(--bad); font-weight: 700; }
+  .reveal svg { width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1. Title -->
+<section>
+  <div class="eyebrow">MGT 409 · Final project</div>
+  <h1>Donor Diligence Desk</h1>
+  <div class="bar"></div>
+  <p style="font-size:1.05em">A one-minute, investment-committee style giving memo for any US charity, written by AI agents that are not allowed to invent a number.</p>
+  <p class="small" style="margin-top:1.4em">Talha Javed · October 26, 2026 · <a href="https://github.com/talha1732/donor-diligence-desk">github.com/talha1732/donor-diligence-desk</a></p>
+</section>
+
+<!-- 2. Problem -->
+<section>
+  <div class="eyebrow">The problem</div>
+  <h2>Donors want to give well, but checking a charity takes an afternoon</h2>
+  <div class="grid3">
+    <div class="card"><div class="big">$394B</div><div class="l">given by US individuals in 2025; about 18% of a year's giving lands in December</div></div>
+    <div class="card"><div class="big">35%</div><div class="l">of donors research before giving; 2% compare charities' performance, though 85% say it matters</div></div>
+    <div class="card"><div class="big">3 to 6 h</div><div class="l">to read three years of IRS Form 990s for three charities by hand (our estimate)</div></div>
+  </div>
+  <p class="small" style="margin-top:1em">Who: individual donors, giving circles (about 4,000 in the US), small family foundations. None has a program officer. Ratings cover about 15% of charities, and the local ones donors care about are often unrated.</p>
+  <p class="tiny">Giving USA 2026; Blackbaud Institute 2026; Money for Good (Hope Consulting); Charity Navigator; sources in docs/research.md</p>
+</section>
+
+<!-- 3. What is new -->
+<section>
+  <div class="eyebrow">What is new</div>
+  <h2>Not another star rating: a memo you can check, weighted to you</h2>
+  <table>
+    <tr><th></th><th>Charity Navigator</th><th>GiveWell</th><th>ChatGPT / Perplexity</th><th>Donor Diligence Desk</th></tr>
+    <tr><td>Any charity you name, incl. local</td><td>245K rated</td><td class="no">4 charities</td><td class="yes">yes</td><td class="yes">yes (Form 990 filers)</td></tr>
+    <tr><td>Weighted to your priorities</td><td class="no">no</td><td class="no">no</td><td>loosely</td><td class="yes">yes, re-weight instantly</td></tr>
+    <tr><td>Every number linked to its source</td><td class="no">no</td><td>in reports</td><td class="no">often mis-cited</td><td class="yes">yes, and verified</td></tr>
+    <tr><td>Questions to ask the charity</td><td class="no">no</td><td class="no">no</td><td>if asked</td><td class="yes">yes, drafted as an email</td></tr>
+    <tr><td>Safe against hidden instructions on websites</td><td>n/a</td><td>n/a</td><td class="no">not by design</td><td class="yes">yes, tested</td></tr>
+    <tr><td>Human analyst review</td><td class="yes">yes</td><td class="yes">deep</td><td class="no">no</td><td class="no">no</td></tr>
+  </table>
+</section>
+
+<!-- 4. Agents -->
+<section>
+  <div class="eyebrow">How it works</div>
+  <h2>Four AI agents between code that handles every number</h2>
+  {{svg:architecture.svg}}
+  <p class="small">Fixed pipeline, not a free-roaming boss agent: predictable cost, no loops, every stage testable. gpt-6-luna for reading and judging; Python for arithmetic and checking.</p>
+</section>
+
+<!-- 5. Demo -->
+<section>
+  <div class="eyebrow">Demo: one real run</div>
+  <h2>Pick charities, set priorities, watch six agents work</h2>
+  <div class="grid2" style="grid-template-columns: 0.8fr 1.2fr">
+    <ul class="small">
+      <li>Real run: Connecticut Foodshare, Columbus House, IRIS for a New Haven donor</li>
+      <li>Six specialists in parallel read 990 data and websites: 29 tool calls</li>
+      <li>Verifier checked 18 numeric findings: all matched</li>
+      <li>Red-Team Auditor removed 3 claims the evidence did not support</li>
+      <li>115 seconds, 18 model requests, <b>$0.0085</b></li>
+    </ul>
+    <div><img class="shot" src="{{img:walk-3-running.webp}}" alt="Live run"><div class="cap">Live run screen: agent cards, tool calls, spend meter, safety panel</div></div>
+  </div>
+</section>
+
+<!-- 6. Memo -->
+<section>
+  <div class="eyebrow">The output</div>
+  <h2>A memo you can check line by line</h2>
+  <div class="grid2" style="grid-template-columns: 1.15fr 0.85fr">
+    <div><img class="shot" src="{{img:walk-5-memo-top.webp}}" alt="Memo"><div class="cap">Action-title headline, summary, recommendation</div></div>
+    <div><img class="shot" src="{{img:walk-6-evidence.webp}}" alt="Evidence drawer" style="max-height:300px"><div class="cap">Every number opens its source and formula</div>
+      <ul class="small" style="margin-top:.6em">
+        <li>0 to 100 scorecard on five dimensions, re-weight instantly</li>
+        <li>Gaps become questions, drafted as an email</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- 7. Cost -->
+<section>
+  <div class="eyebrow">Cost to run</div>
+  <h2>Less than a cent per memo, measured</h2>
+  <div class="grid4">
+    <div class="card accent"><div class="big">$0.006</div><div class="l">typical 2-charity memo: 60K input tokens (70% cached), 7K output, about 1 minute</div></div>
+    <div class="card"><div class="big">$0.03</div><div class="l">per donor per month (5 memos)</div></div>
+    <div class="card"><div class="big">$3</div><div class="l">per month for 100 donors</div></div>
+    <div class="card"><div class="big">$315</div><div class="l">per month for 10,000 donors (model only)</div></div>
+  </div>
+  <ul class="small" style="margin-top:1em">
+    <li>Code computes all 17 ratios, so prompts carry short facts, not raw filings</li>
+    <li>Stable prompts first: 68% of input tokens served from cache, about a third off the bill</li>
+    <li>Caps: 2 searches and 3 pages per charity; $0.10 kill switch per run, $2 per day</li>
+    <li>Tested a lean browsing mode: 6% cheaper, but it misses facts on subpages, so it was not shipped</li>
+  </ul>
+</section>
+
+<!-- 8. Safety -->
+<section>
+  <div class="eyebrow">Safety</div>
+  <h2>Charity websites are untrusted input, and the defenses are tested</h2>
+  <div class="grid2" style="grid-template-columns: 1.25fr 0.75fr">
+    <div>
+      <div class="grid2" style="gap:14px">
+        <div class="card accent"><div class="big">0 / 43</div><div class="l">injected instructions reaching the model, defenses on / off (9 attack pages)</div></div>
+        <div class="card accent"><div class="big">0 / 18</div><div class="l">live runs with a planted claim in the memo, defenses on (9 of 9 with defenses off)</div></div>
+      </div>
+      <ul class="small" style="margin-top:.8em">
+        <li>Hidden text removed (white-on-white, display:none, comments, off-screen)</li>
+        <li>Verifier deletes any finding whose numbers do not match the IRS ledger</li>
+        <li>$0.10 per run and $2 per day kill switches; tool and request caps</li>
+        <li>Unreadable sites and missing data are "not scored", never 0</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="{{img:safety-panel.webp}}" alt="Safety panel" style="max-height:520px"></div>
+  </div>
+</section>
+
+<!-- 9. Impact -->
+<section>
+  <div class="eyebrow">Impact</div>
+  {{TODO:slide-impact}}
+</section>
+
+<!-- 10. Next -->
+<section>
+  <div class="eyebrow">What's next</div>
+  <h2>From a working prototype to the December giving season</h2>
+  <div class="grid2">
+    <div>
+      <h3>Limits today</h3>
+      <ul class="small">
+        <li>Free IRS data lacks program-spending share and runs about a year behind</li>
+        <li>Impact evidence is only what a charity publishes; some sites block automated readers</li>
+        <li>Scores use a documented rubric, a hypothesis rather than a standard</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Next month</h3>
+      <ul class="small">
+        <li>Parse full e-filed 990s for program and fundraising expenses</li>
+        <li>Pilot with a New Haven giving circle in December</li>
+        <li>Send the drafted questions, record answers as evidence, re-score</li>
+        <li>A self-check mode for nonprofit executive directors</li>
+      </ul>
+    </div>
+  </div>
+  <p class="small" style="margin-top:1em">Try it: <a href="https://github.com/talha1732/donor-diligence-desk">github.com/talha1732/donor-diligence-desk</a> · <code>python backend/run.py</code></p>
+</section>
+
+</div></div>
+<script>{{reveal_js}}</script>
+<script>
+  Reveal.initialize({ hash: true, controls: true, progress: true, center: false, width: 1280, height: 760, margin: 0.06,
+                      transition: "slide", slideNumber: "c/t" });
+</script>
+</body>
+</html>

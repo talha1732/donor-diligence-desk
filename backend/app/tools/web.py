@@ -58,6 +58,10 @@ def _clip(text: Any, limit: int) -> str:
     return text if len(text) <= limit else text[: limit - 3].rstrip() + "..."
 
 
+def _short_query(query: str, words: int = 6) -> str:
+    return " ".join(re.sub(r"[^\w\s'-]", " ", query).split()[:words])
+
+
 async def web_search(query: str, max_results: int = 5) -> list[WebSearchResult]:
     """DuckDuckGo via the `ddgs` package (no API key). Return [] on any failure; never raise."""
     try:
@@ -66,6 +70,10 @@ async def web_search(query: str, max_results: int = 5) -> list[WebSearchResult]:
             return []
         max_results = max(1, min(int(max_results), 10))
         raw = await asyncio.wait_for(asyncio.to_thread(_ddgs_text, query, max_results), timeout=SEARCH_TIMEOUT_S)
+        short = _short_query(query)
+        if not raw and short and short != query:
+            # Long agent-written queries (with "&" or many keywords) often return nothing; retry once, shorter.
+            raw = await asyncio.wait_for(asyncio.to_thread(_ddgs_text, short, max_results), timeout=SEARCH_TIMEOUT_S)
         out: list[WebSearchResult] = []
         for item in raw or []:
             if not isinstance(item, dict):

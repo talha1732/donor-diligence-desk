@@ -2529,3 +2529,575 @@ input[type="range"]::-moz-range-thumb {
     background: #fff;
   }
 }
+
+/* ------------------------------------------------------------------ try different priorities */
+
+.print-only {
+  display: none;
+}
+
+.reweight {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--soft);
+  padding: 16px 20px 14px;
+}
+
+.reweight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.reweight-head h3 {
+  font-size: 17px;
+  margin-bottom: 3px;
+}
+
+.reweight-note {
+  margin: 0;
+  max-width: 820px;
+}
+
+.reweight-reset,
+.reweight-status {
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.reweight-reset {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.reweight-status {
+  color: var(--muted);
+}
+
+.reweight-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rw-cell {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px 9px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.rw-cell.is-moved {
+  border-color: var(--accent-line);
+  box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+.rw-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rw-label {
+  font-weight: 650;
+  font-size: 13.5px;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.rw-value {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.rw-cell.is-moved .rw-value {
+  color: var(--accent);
+}
+
+.rw-cell input[type="range"] {
+  display: block;
+  margin: 6px 0 8px;
+}
+
+.rw-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.reweight-zero {
+  margin: 10px 0 0;
+}
+
+.glance .rank-col {
+  width: 64px;
+  white-space: nowrap;
+}
+
+.rank-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--navy);
+}
+
+.move,
+.delta {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+  padding: 3px 6px;
+  margin-left: 6px;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+.move-up,
+.delta-up {
+  color: var(--good);
+  background: var(--good-bg);
+}
+
+.move-down,
+.delta-down {
+  color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.delta-same {
+  color: var(--muted);
+  background: var(--soft-2);
+  font-weight: 600;
+}
+
+.overall-cell {
+  white-space: nowrap;
+}
+
+.glance tr.row-moved td {
+  background: #fbfdfd;
+}
+
+.th-sub.th-changed {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.overall-was {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.weight-changed {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ revenue and expense trend */
+
+.score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.trend-wrap {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px 10px;
+  background: #fcfcfd;
+}
+
+.trend-head {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.trend-title {
+  font-weight: 650;
+  font-size: 13.5px;
+  color: var(--navy);
+  line-height: 1.35;
+}
+
+.trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lg svg line {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.lg-revenue svg line,
+.lg-revenue svg circle {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+
+.lg-expenses svg line,
+.lg-expenses svg rect {
+  stroke: var(--navy);
+  fill: var(--navy);
+}
+
+.lg-swatch {
+  width: 12px;
+  height: 10px;
+  border-radius: 2px;
+  background: #fbe3e0;
+  border: 1px solid #f4c1bc;
+}
+
+.trend-plot {
+  position: relative;
+}
+
+.trend {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.trend-grid {
+  stroke: #e6e9ee;
+  stroke-width: 1;
+}
+
+.trend-base {
+  stroke: #c9ced8;
+}
+
+.trend-ytick,
+.trend-xtick {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-xtick {
+  font-size: 11px;
+  fill: var(--ink-2);
+}
+
+.trend-xtick.is-deficit {
+  fill: var(--bad);
+  font-weight: 700;
+}
+
+.trend-deficit {
+  fill: #fbe3e0;
+  opacity: 0.85;
+}
+
+.trend-cross {
+  stroke: #b8bfcc;
+  stroke-width: 1;
+}
+
+.trend-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-line-revenue {
+  stroke: var(--accent);
+}
+
+.trend-line-expenses {
+  stroke: var(--navy);
+}
+
+.trend-col {
+  fill: transparent;
+}
+
+.trend-hit {
+  fill: transparent;
+}
+
+.trend-pt {
+  cursor: pointer;
+  outline: none;
+}
+
+.trend-mark {
+  stroke: #fcfcfd;
+  stroke-width: 2;
+  transition: transform 0.1s;
+}
+
+.trend-pt-revenue .trend-mark {
+  fill: var(--accent);
+}
+
+.trend-pt-expenses .trend-mark {
+  fill: var(--navy);
+}
+
+.trend-pt:hover .trend-hit,
+.trend-pt:focus-visible .trend-hit {
+  fill: rgba(15, 118, 110, 0.12);
+}
+
+.trend-pt-expenses:hover .trend-hit,
+.trend-pt-expenses:focus-visible .trend-hit {
+  fill: rgba(20, 33, 61, 0.1);
+}
+
+.trend-tip {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(20, 33, 61, 0.12);
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.tip-year {
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 3px;
+}
+
+.tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tip-row strong {
+  margin-left: auto;
+  padding-left: 10px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.tip-key {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.tip-key.tip-expenses {
+  border-radius: 1.5px;
+  background: var(--navy);
+}
+
+.tip-note {
+  margin-top: 3px;
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.trend-summary {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------ email the questions */
+
+.email-cta {
+  margin-top: 12px;
+}
+
+.email-cta .btn svg,
+.email-panel .btn svg {
+  flex: none;
+}
+
+.email-panel {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: var(--soft);
+  padding: 14px 16px 12px;
+  animation: slidein 0.16s ease-out;
+}
+
+.email-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.email-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--navy);
+}
+
+.email-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.email-field input,
+.email-field textarea {
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.email-field textarea {
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 220px;
+}
+
+.email-field input:focus,
+.email-field textarea:focus {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+.email-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.email-actions a.btn {
+  text-decoration: none;
+}
+
+.email-status {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.email-note {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 1360px) {
+  .reweight-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .reweight-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reweight-head {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media print {
+  .print-only {
+    display: revert;
+  }
+  .reweight,
+  .email-panel,
+  .email-cta,
+  .trend-tip {
+    display: none !important;
+  }
+  .trend-wrap {
+    background: #fff;
+    break-inside: avoid;
+    padding: 8px 10px;
+  }
+  .trend-deficit,
+  .trend-mark,
+  .lg-swatch,
+  .move,
+  .delta {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .trend-title {
+    font-size: 9.5pt;
+  }
+  .trend-legend,
+  .trend-summary {
+    font-size: 8.5pt;
+  }
+}
+
+.rw-cell input[type="range"]:focus {
+  outline: none;
+}
+
+.rw-cell input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--accent-line);
+}
+
+.rw-cell input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--accent-line);
+}
+
+.trend-tip.tip-after {
+  transform: translateX(12px);
+}
+
+.trend-tip.tip-before {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.trend-tip.tip-low {
+  top: auto;
+  bottom: 30px;
+}

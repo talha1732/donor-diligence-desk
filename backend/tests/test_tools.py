@@ -568,3 +568,28 @@ def test_cost_discipline_drops_unused_growth_driver():
     assert "CALC-123456789-revenue_cagr_3y" not in cost.drivers
     assert "expense_cagr_3y" in cost.missing_inputs
     assert "expense growth versus revenue growth could not be computed" in cost.explanation
+
+
+async def test_web_search_retries_once_with_a_shorter_query(monkeypatch):
+    monkeypatch.setenv("OFFLINE_MODE", "0")
+    seen = []
+
+    def fake(query, max_results):
+        seen.append(query)
+        return [] if len(seen) == 1 else [{"title": "IRIS", "href": "https://irisct.org/", "body": "Refugee services"}]
+
+    monkeypatch.setattr(web, "_ddgs_text", fake)
+    results = await web.web_search("Integrated Refugee & Immigrant Services IRIS Connecticut impact outcomes evaluation")
+    assert [r.url for r in results] == ["https://irisct.org/"]
+    assert seen[1] == "Integrated Refugee Immigrant Services IRIS Connecticut"
+
+
+def test_unreadable_website_leaves_impact_unscored_not_zero():
+    profile = load_cached_profile("061063025")
+    metrics, _ = financials.compute_metrics(profile, today=date(2026, 10, 26))
+    blocked = ImpactAssessment(ein=profile.ein, evidence_level=0, pages_read=[], evidence_ids=[])
+    card = score_charity(profile, metrics, blocked, Weights())
+    impact = next(d for d in card.dimensions if d.dimension == "impact_evidence")
+    assert impact.score is None
+    assert "could not be read" in impact.explanation
+    assert card.overall is not None and card.band != "insufficient_data"

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Health, Weights } from "../types";
 import { DIMENSIONS, DIMENSION_LABELS } from "../types";
-import { DIMENSION_HELP } from "../labels";
+import { DIMENSION_HELP, IMPORTANCE } from "../labels";
 import { fmtCost } from "../format";
 import type { Selected } from "./ChooseScreen";
 import { Notice, OrgName, Spinner } from "./common";
 
-const IMPORTANCE = ["Ignore", "Low", "Some", "Important", "High", "Top priority"];
 export const NOTE_MAX = 500;
 export const MAX_BUDGET = 0.5;
 
