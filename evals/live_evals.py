@@ -292,14 +292,14 @@ async def naive() -> list[dict]:
 async def main(which: list[str]) -> None:
     if not get_settings().key_present:
         sys.exit("No PORTKEY_API_KEY found; live evaluations need the course key.")
-    existing = json.loads(OUT.read_text()) if OUT.exists() else {}
+    existing = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     funcs = {"tokenomics": tokenomics, "injection": injection, "page_cap": page_cap, "naive": naive,
              "hidden_facts": hidden_facts, "hidden_facts_plain": hidden_facts_plain, "lean": lean}
     for name in which:
         print(f"[{name}]")
         existing[name] = {"ran_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "rows": await funcs[name]()}
         OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(json.dumps(existing, indent=1, default=str))
+        OUT.write_text(json.dumps(existing, indent=1, default=str), encoding="utf-8")
     total = sum(r.get("cost_usd", 0) for k in which for r in existing[k]["rows"])
     print(f"done; spent ${total:.4f} in this invocation; results in {OUT.relative_to(REPO_ROOT)}")
 

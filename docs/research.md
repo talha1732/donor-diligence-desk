@@ -217,6 +217,21 @@ extract match the audit within $843 and liabilities and net assets within 0.25%.
 be checked against ProPublica's own page, which matches the API exactly. Revenue and expense gaps of
 up to about 5% come from GAAP versus 990 presentation, not extraction errors.
 
+## 8. Additional verified studies on research time (added 2026-10-26)
+
+Checked against the original PDFs on 2026-10-26 (text extracted and searched).
+
+| Study | Finding (quoted or exact) | Source |
+|---|---|---|
+| Money for Good II, Hope Consulting with GuideStar (November 2011); 5,000+ individual donors, 800+ advisors, 700+ foundation grantmakers | "Foundations research 9 out of 10 grants, and on average spend 4 hours doing so"; "84% spend more than 1 hour researching (vs. 30% for individual donors)", "Median = 4 hours". Individual donors' researched gifts: 44% took 0 to 30 minutes, 26% 30 minutes to 1 hour, 15% 1 to 2 hours, 7% 2 to 6 hours. | https://www.multivu.com/players/English/52621-guidestar-and-hope-consulting-money-for-good-II/flexSwf/impAsset/document/38fdbdd6-68e7-479c-aa57-2dc3a09c78ff.pdf |
+| Brown and Halvorsen, Boston College survey of midlevel donors (fielded April 2020; 1,260 Americans age 35+ who gave $2,000 to $20,000 in 2019) | Time spent on research: 34% less than 15 minutes, 33% 15 minutes to 1 hour, 33% more. "Only 1/3rd compared charities before donating (only 44% of those giving over $10,000 a year)". Why not: "25% say no time, don't know how, didn't think to do it; 43% already know" whom to support. 19% researched all donations. "57% of donors who give over $15,000 spent less than an hour on research." | https://www.sylviabrownsmartdonors.com/wp-content/uploads/sites/6/infographic.pdf |
+
+**Reading.** Professional grantmakers, who do this for a living, spend a median of 4 hours per grant;
+individual donors mostly spend under an hour and rarely compare. A quarter of midlevel donors who did
+not compare said time or know-how stopped them, and 43% were already loyal to a charity, so the
+realistic first users are donors choosing among new charities, giving circles and small foundations.
+These two studies were first collected for a parallel build of this project and verified here.
+
 ## Source list (all accessed 2026-10-26)
 
 - Giving USA 2026 summary, IU Lilly School: https://philanthropy.indianapolis.iu.edu/professional-development/blog/the-giving-usa-2026-report-deserves-a-closer-look.html

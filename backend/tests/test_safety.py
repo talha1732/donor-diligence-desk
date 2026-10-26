@@ -536,3 +536,38 @@ def test_remove_unverified_sentences():
     kept, removed = remove_unverified_sentences(text, LEDGER)
     assert kept == "Revenue reached $1.58M in 2024. Ask for outcome data."
     assert removed == ["Program spending is 95%."]
+
+
+# ----------------------------------------------------------------------------- second attack catalogue
+
+from app.safety.attacks import ATTACKS, page_with  # noqa: E402
+
+
+def test_second_catalogue_shape():
+    assert len(ATTACKS) >= 19
+    assert len({a["id"] for a in ATTACKS}) == len(ATTACKS)
+    for a in ATTACKS:
+        assert {"id", "technique", "payload", "format", "channel", "hidden", "marker"} <= set(a)
+
+
+@pytest.mark.parametrize("attack", ATTACKS, ids=[f"{a['id']}-{a['technique']}" for a in ATTACKS])
+def test_second_catalogue_attack_is_detected(attack):
+    if attack["format"] == "html":
+        page = sanitize_html(page_with(attack["payload"]), "https://example.org/")
+        assert page.injection_findings, "sanitize_html found no injection"
+        if attack["hidden"]:
+            assert attack["marker"] not in page.visible_text
+            assert page.hidden_segments
+    else:
+        location = {"donor_note": "user_input", "search_snippet": "search_snippet"}.get(attack["channel"], "visible")
+        assert detect_injection(attack["payload"], location), "detect_injection found nothing"
+
+
+@pytest.mark.parametrize("attack", [a for a in ATTACKS if a["format"] == "text"], ids=lambda a: a["id"])
+def test_second_catalogue_redaction_leaves_nothing_detectable(attack):
+    text = "Welcome to our pantry. " + attack["payload"] + " We are open on Saturdays."
+    redacted, findings = redact_injections(text, "visible")
+    assert findings
+    assert attack["marker"] not in redacted
+    assert detect_injection(redacted, "visible") == []
+    assert redacted.startswith("Welcome to our pantry.")
